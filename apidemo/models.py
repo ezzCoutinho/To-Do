@@ -1,5 +1,5 @@
-from django.db import models # models trabalha com objetos relacionais
-from django.utils import timezone 
+from django.db import models # models trabalha com objetos relacionais.
+from django.utils import timezone # trabalha com datas e horas.
 
 class Tag(models.Model):
   name = models.CharField(max_length=50)
@@ -20,6 +20,6 @@ class Task(models.Model):
   def __str__(self): # função que retorna o título
     return self.title
   
-  @property
+  @property # método abaixo vai se comportar como um atributo da classe Task.
   def is_overdue(self): # função que verifica se a tarefa está atrasada
     return self.due_date and self.due_date < timezone.now() and not self.completed
