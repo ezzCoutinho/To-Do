@@ -10,14 +10,13 @@ Tailwind: Domínio completo para estilização.
 
 💻 Criação de um Aplicativo de To Do:
 Tecnologias obrigatórias:
-
-Django Ninja
-NextJS
-Tailwind
-TanStack Query
-NextAuth/BetterAuth
-Postgres
-ShadCN (opcional)
+  Django Ninja
+  NextJS
+  Tailwind
+  TanStack Query
+  NextAuth/BetterAuth
+  Postgres
+  ShadCN (opcional)
 
 Requisitos do Aplicativo:
 1. Autenticação
