@@ -1,5 +1,5 @@
 from ninja import Schema, ModelSchema
-from models import Task, Tag
+from apidemo.models import Task, Tag
 
 class TagSchema(ModelSchema): # convertendo o modelo para uma schema
   class Config:
@@ -16,3 +16,12 @@ class TaskCreateSchema(Schema): # criando uma nova schema
   description: str
   due_date: str = None
   tags: list[int] = []
+
+from datetime import date
+from ninja import Schema
+
+class EmployeeIn(Schema):
+    first_name: str
+    last_name: str
+    department_id: int = None
+    birthdate: date = None
