@@ -1,20 +1,14 @@
-from ninja import NinjaAPI, Schema, UploadedFile, File, Form
-from apidemo.schemas import EmployeeIn
+from ninja import NinjaAPI
+from django.contrib.auth import authenticate
+from apidemo.schemas import EmployeeIn, LoginSchema
 from apidemo.models import Employee
 api = NinjaAPI()
 
-@api.post("/employees")
-def create_employee(request, employee: EmployeeIn = Form(...), cv: UploadedFile = File(...)):
-    employee_dict = employee.dict()
-    employee_instance = Employee(**employee_dict)
-    employee_instance.cv.save(cv.name, cv)
-    employee_instance.save()
-    return {"id": employee_instance.id}
-
-@api.get("/hello") # primeira rota
-def hello(request, name):
-  return {"message": f"Hello {name}"}
-
-@api.get("/math/{a}and{b}")
-def math(request, a:int, b:int):
-  return {"add": a + b, "multiply": a * b}
+@api.post("/login")
+def login(request, data: LoginSchema):
+  user = authenticate(username=data.username, password=data.password)
+  if user is not None:
+    return {"success": True, "message": "Usuário autenticado."}
+  else:
+    return {"success": False, "message": "Usuário não autenticado."}
+  
