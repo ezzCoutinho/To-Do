@@ -1,5 +1,7 @@
 from ninja import Schema, ModelSchema
 from apidemo.models import Task, Tag
+from datetime import date
+from pydantic import BaseModel
 
 class TagSchema(ModelSchema): # convertendo o modelo para uma schema
   class Config:
@@ -17,8 +19,9 @@ class TaskCreateSchema(Schema): # criando uma nova schema
   due_date: str = None
   tags: list[int] = []
 
-from datetime import date
-from ninja import Schema
+class LoginSchema(BaseModel):
+  username: str
+  password: str
 
 class EmployeeIn(Schema):
     first_name: str
