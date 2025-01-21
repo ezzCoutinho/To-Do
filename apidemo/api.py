@@ -1,7 +1,10 @@
 from ninja import NinjaAPI
 from django.contrib.auth import authenticate
-from apidemo.schemas import EmployeeIn, LoginSchema
-from apidemo.models import Employee
+from django.contrib.auth.models import User
+from apidemo.schemas import RegisterSchema, LoginSchema
+from django.core.validators import EmailValidator
+from django.core.exceptions import ValidationError
+
 api = NinjaAPI()
 
 @api.post("/login")
@@ -11,4 +14,16 @@ def login(request, data: LoginSchema):
     return {"success": True, "message": "Usuário autenticado."}
   else:
     return {"success": False, "message": "Usuário não autenticado."}
-  
+
+@api.post("/register")
+def register(request, data: RegisterSchema):
+  if User.objects.filter(username=data.username).exists():
+    return {"success": False, "message": "Usuário já existe."}
+  if User.objects.filter(email=data.email).exists():
+    return {"success": False, "message": "Email já existe."}
+
+  try:
+      user = User.objects.create_user(username=data.username, email=data.email, password=data.password)
+  except ValidationError as e:
+      return {"success": False, "message": str(e)}
+  return {"success": True, "message": "Usuário criado."}
