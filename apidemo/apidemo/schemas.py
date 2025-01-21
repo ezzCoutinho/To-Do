@@ -1,7 +1,9 @@
 from ninja import Schema, ModelSchema
 from apidemo.models import Task, Tag
 from datetime import date
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
+from django.core.validators import EmailValidator
+from django.core.exceptions import ValidationError
 
 class TagSchema(ModelSchema): # convertendo o modelo para uma schema
   class Config:
@@ -22,6 +24,11 @@ class TaskCreateSchema(Schema): # criando uma nova schema
 class LoginSchema(BaseModel):
   username: str
   password: str
+
+class RegisterSchema(BaseModel):
+  username: str
+  password: str
+  email: EmailStr
 
 class EmployeeIn(Schema):
     first_name: str
