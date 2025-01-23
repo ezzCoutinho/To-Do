@@ -1,4 +1,4 @@
-from ninja import NinjaAPI
+from ninja import NinjaAPI, Router
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from apidemo.schemas import RegisterSchema, LoginSchema
@@ -6,6 +6,12 @@ from django.core.validators import EmailValidator
 from django.core.exceptions import ValidationError
 
 api = NinjaAPI()
+
+router = Router()
+
+@api.get("/todos", response=list)
+def get_todos(request):
+    return [{"id": 1, "title": "Task 1"}, {"id": 2, "title": "Task 2"}]
 
 @api.post("/login")
 def login(request, data: LoginSchema):
@@ -27,3 +33,4 @@ def register(request, data: RegisterSchema):
   except ValidationError as e:
       return {"success": False, "message": str(e)}
   return {"success": True, "message": "Usuário criado."}
+
