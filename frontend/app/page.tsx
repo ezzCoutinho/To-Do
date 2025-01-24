@@ -1,18 +1,10 @@
-import Link from 'next/link';
-import React from 'react';
-import TestAuthComponent from '../app/tests/TestAuthComponent';
+import { Button } from "@/components/ui/button"
 
-
-const HomePage: React.FC = () => {
+export default function Home() {
   return (
     <div>
-      <h1>Projeto to-do</h1>
-      <Link href="/login">Login</Link>
-      <Link href="/register">Register</Link>
-      <h1>Página Inicial</h1>
-      <TestAuthComponent/>
+      <Button>Click me</Button>
+      <div className="bg-warning text-warning-foreground">Hello</div>
     </div>
-  );
+  )
 }
-
-export default HomePage;
