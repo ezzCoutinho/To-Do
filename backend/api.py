@@ -1,13 +1,10 @@
-from ninja import NinjaAPI, Router
+from ninja import NinjaAPI
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from apidemo.schemas import RegisterSchema, LoginSchema
-from django.core.validators import EmailValidator
 from django.core.exceptions import ValidationError
 
 api = NinjaAPI()
-
-router = Router()
 
 @api.get("/todos", response=list)
 def get_todos(request):
@@ -34,3 +31,7 @@ def register(request, data: RegisterSchema):
       return {"success": False, "message": str(e)}
   return {"success": True, "message": "Usuário criado."}
 
+
+@api.get("/test-auth")
+def test_auth(request):
+    return {"success": True, "message": "Autenticação bem-sucedida."}
