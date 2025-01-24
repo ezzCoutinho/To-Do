@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from apidemo.schemas import RegisterSchema, LoginSchema
 from django.core.exceptions import ValidationError
 
+
 api = NinjaAPI()
 
 @api.get("/todos", response=list)
