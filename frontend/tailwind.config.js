@@ -6,7 +6,10 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: { warning: "hsl(var(--warning))",
+        "warning-foreground": "hsl(var(--warning-foreground))",}
+    },
   },
   plugins: [],
 };
