@@ -20,5 +20,5 @@ from api import api # importação do arquivo api.py
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", api.urls),
+    path("api/", api.urls)
 ]
