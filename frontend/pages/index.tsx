@@ -1,38 +1,38 @@
-// filepath: /pages/index.tsx
-import { useSession } from "next-auth/react";
-import LoginButton from "../components/LoginButton";
-import LogoutButton from "../components/LogoutButton";
-import { LoginForm } from "@/components/auth/LoginForm";
-import { ProviderButtons } from "@/components/auth/ProviderButtons";
+"use client";
+
+import { useRouter } from "next/router";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
-  const { data: session } = useSession();
+  const router = useRouter();
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      {session ? (
-        <>
-          <div>
-            <h1>Welcome to NextAuth.js</h1>
-            <p>Signed in as {session?.user?.email}</p>
-            <LogoutButton />
-          </div>
-        </>
-      ) : (
-        <Card className="w-full max-w-sm p-4 shadow-md">
-          <CardHeader>
-            <CardTitle className="text-center">Login</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* Formulário de Login */}
-            <LoginForm />
-            <div className="my-6" />
-            {/* Botões de Login com provedores */}
-            <ProviderButtons />
-          </CardContent>
-        </Card>
-      )}
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <Card className={cn("w-full max-w-md p-6 shadow-lg")}>
+        <CardHeader>
+          <CardTitle className="text-center text-2xl font-bold">
+            Bem-vindo ao <span className="text-primary">To_Do</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col space-y-4">
+          <Button
+            className="w-full"
+            variant="default"
+            onClick={() => router.push("/login")}
+          >
+            Já tem uma conta? Clique aqui
+          </Button>
+          <Button
+            className="w-full"
+            variant="outline"
+            onClick={() => router.push("/register")}
+          >
+            Ainda não tem uma conta? Clique aqui
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
