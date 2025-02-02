@@ -1,0 +1,8 @@
+django
+django-ninja
+djangorestframework
+psycopg2-binary
+python-dotenv
+django-cors-headers
+email-validator
+dj-database-url
