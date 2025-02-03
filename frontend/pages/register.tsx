@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/router";
+import { useState } from "react";
+import { useRouter } from "next/navigation"; // Next.js 13+ usa "next/navigation"
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,52 @@ import { Separator } from "@/components/ui/separator";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirm_password: "", // Adicionando o campo de confirmação de senha
+  });
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    // Verificar se as senhas coincidem antes de enviar
+    if (formData.password !== formData.confirm_password) {
+      setMessage("As senhas não coincidem!");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage("Conta criada com sucesso! Redirecionando...");
+        setTimeout(() => router.push("/login"), 2000);
+      } else {
+        setMessage(data.error || "Erro ao criar conta.");
+      }
+    } catch (error) {
+      setMessage("Erro no servidor. Tente novamente mais tarde.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
@@ -18,18 +65,54 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent className="flex flex-col space-y-4">
           {/* Formulário de Registro */}
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome</Label>
-            <Input id="name" type="text" placeholder="Seu Nome" />
+          <form onSubmit={handleSubmit} className="space-y-2">
+            <Label htmlFor="username">Nome</Label>
+            <Input
+              id="username"
+              name="username"
+              type="text"
+              placeholder="Seu Nome"
+              onChange={handleChange}
+              required
+            />
 
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="seu@email.com" />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="seu@email.com"
+              onChange={handleChange}
+              required
+            />
 
             <Label htmlFor="password">Senha</Label>
-            <Input id="password" type="password" placeholder="••••••••" />
-          </div>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="••••••••"
+              onChange={handleChange}
+              required
+            />
 
-          <Button className="w-full">Criar Conta</Button>
+            <Label htmlFor="confirm_password">Confirmar Senha</Label>
+            <Input
+              id="confirm_password"
+              name="confirm_password"
+              type="password"
+              placeholder="••••••••"
+              onChange={handleChange}
+              required
+            />
+
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? "Criando Conta..." : "Criar Conta"}
+            </Button>
+          </form>
+
+          {/* Mensagem de erro/sucesso */}
+          {message && <p className={`text-center text-sm ${message.includes("sucesso") ? "text-green-500" : "text-red-500"}`}>{message}</p>}
 
           <Separator />
 
