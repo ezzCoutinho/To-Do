@@ -1,5 +1,9 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { TaskBoard } from "@/components/TaskBoard";
+import { Button } from "@/components/ui/button";
+import { Card, CardTitle } from "@/components/ui/card";
 
 interface Tarefa {
   id: number;
@@ -35,17 +39,19 @@ export default function Tarefas() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-10">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Tarefas</h1>
-        <button
-          onClick={adicionarTarefa}
-          className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
-        >
-          + Tarefa
-        </button>
+    <div className="min-h-screen bg-background p-6">
+      {/* Header */}
+      <Card className="w-full p-4 shadow-md flex justify-between items-center">
+        <CardTitle className="text-2xl font-semibold">Gerenciador de Tarefas</CardTitle>
+        <Button onClick={adicionarTarefa} className="bg-gray-700 text-white px-3 py-1 text-sm hover:bg-gray-600">
+          + Adicionar
+        </Button>
+      </Card>
+
+      {/* Kanban Board */}
+      <div className="mt-6">
+        <TaskBoard tarefas={tarefas} setTarefas={setTarefas} />
       </div>
-      <TaskBoard tarefas={tarefas} setTarefas={setTarefas} />
     </div>
   );
 }
