@@ -1,12 +1,13 @@
-from ninja import NinjaAPI
+from ninja import NinjaAPI, Router
 from .models import Tarefa
-from .schemas import TarefaSchema, TarefaCreateSchema
+from .schemas import TarefaSchema
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 from .models import Usuario
 from .schemas import RegistroSchema
 
 api = NinjaAPI()
+router = Router()
 
 @api.post("/register/")
 def register_user(request, data: RegistroSchema):
@@ -34,15 +35,6 @@ def register_user(request, data: RegistroSchema):
     except ValidationError as e:
         return {"error": str(e)}
 
-# Listar todas as tarefas
-@api.get("/tarefas", response=list[TarefaSchema])
+@router.get("/tarefas/", response=list[TarefaSchema])
 def listar_tarefas(request):
     return Tarefa.objects.all()
-
-# Criar uma nova tarefa (sem ID no body)
-@api.post("/tarefas", response=TarefaSchema)
-def criar_tarefa(request, tarefa: TarefaCreateSchema):
-    nova_tarefa = Tarefa.objects.create(
-        titulo=tarefa.titulo, descricao=tarefa.descricao, concluida=tarefa.concluida
-    )
-    return nova_tarefa
