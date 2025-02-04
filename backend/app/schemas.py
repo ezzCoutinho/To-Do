@@ -5,15 +5,8 @@ class TarefaSchema(Schema):
     id: int
     titulo: str
     descricao: str | None
-    concluida: bool
-
-class TarefaCreateSchema(Schema):
-    titulo: str
-    descricao: str | None
-    concluida: bool
-
-class TarefaSchema(TarefaCreateSchema):
-    id: int
+    status: str
+    responsavel: str | None
 
 class RegistroSchema(Schema):
     username: constr(min_length=3, max_length=150)
