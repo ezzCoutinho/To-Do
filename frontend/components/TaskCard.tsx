@@ -11,13 +11,10 @@ interface TaskProps {
 
 export function TaskCard({ tarefa }: TaskProps) {
   return (
-    <Card className="mb-4 bg-gray-700 text-white p-4 rounded-lg shadow">
-      <CardHeader className="font-bold">{tarefa.titulo}</CardHeader>
-      <CardContent>
-        <p className="text-sm text-gray-300">{tarefa.descricao}</p>
-        <span className="text-xs bg-gray-600 px-2 py-1 rounded mt-2 inline-block">
-          {tarefa.status}
-        </span>
+    <Card className="bg-card text-white p-3 rounded-lg shadow-md hover:shadow-lg transition min-h-[80px] max-w-[250px] flex flex-col">
+      <CardHeader className="font-semibold text-sm leading-tight truncate">{tarefa.titulo}</CardHeader>
+      <CardContent className="text-xs text-gray-300 overflow-hidden text-ellipsis">
+        {tarefa.descricao}
       </CardContent>
     </Card>
   );
