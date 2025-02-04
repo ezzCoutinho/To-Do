@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { TaskCard } from "@/components/TaskCard";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import { TaskCard } from "@/components/TaskCard";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
 
 interface Tarefa {
   id: number;
@@ -35,29 +35,36 @@ export function TaskBoard({ tarefas, setTarefas }: TaskBoardProps) {
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-6 min-h-screen">
         {Object.entries(columns).map(([status, title]) => (
           <Droppable key={status} droppableId={status}>
             {(provided) => (
-              <div
+              <Card
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className="bg-gray-800 p-4 rounded-lg min-h-[300px]"
+                className="p-3 shadow-lg h-full max-h-[600px] flex flex-col"
               >
-                <h2 className="text-lg font-semibold mb-4">{title}</h2>
-                {tarefas
-                  .filter((t) => t.status === status)
-                  .map((tarefa, index) => (
-                    <Draggable key={tarefa.id} draggableId={String(tarefa.id)} index={index}>
-                      {(provided) => (
-                        <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
-                          <TaskCard tarefa={tarefa} />
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                {provided.placeholder}
-              </div>
+                <CardHeader className="font-semibold text-md text-center">{title}</CardHeader>
+                <CardContent className="flex flex-col gap-2 flex-grow overflow-y-auto">
+                  {tarefas
+                    .filter((t) => t.status === status)
+                    .map((tarefa, index) => (
+                      <Draggable key={tarefa.id} draggableId={String(tarefa.id)} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className="flex-shrink-0"
+                          >
+                            <TaskCard tarefa={tarefa} />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                  {provided.placeholder}
+                </CardContent>
+              </Card>
             )}
           </Droppable>
         ))}
