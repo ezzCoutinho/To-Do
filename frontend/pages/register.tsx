@@ -36,7 +36,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch("/api/register", {
+      const response = await fetch("http://127.0.0.1:8000/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -45,10 +45,10 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage("Conta criada com sucesso! Redirecionando...");
-        setTimeout(() => router.push("/login"), 2000);
+        setMessage("Registrado com sucesso! Redirecionando...");
+        setTimeout(() => window.location.href = "http://localhost:3000/login", 5000);
       } else {
-        setMessage(data.error || "Erro ao criar conta.");
+        setMessage(data.detail || "Erro ao criar conta.");
       }
     } catch (error) {
       setMessage("Erro no servidor. Tente novamente mais tarde.");
@@ -112,7 +112,11 @@ export default function RegisterPage() {
           </form>
 
           {/* Mensagem de erro/sucesso */}
-          {message && <p className={`text-center text-sm ${message.includes("sucesso") ? "text-green-500" : "text-red-500"}`}>{message}</p>}
+          {message && (
+            <p className={`text-center text-sm ${message.includes("sucesso") ? "text-green-500" : "text-red-500"}`}>
+              {message}
+            </p>
+          )}
 
           <Separator />
 
