@@ -28,6 +28,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'ninja',  # Django Ninja
     'app',  # Our app
+    'rest_framework',
+    'rest_framework.authtoken',
 ]
 
 MIDDLEWARE = [
@@ -106,6 +108,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/stable/howto/static-files/
 STATIC_URL = '/static/'
 
-AUTH_USER_MODEL = 'app.Usuario'
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'app.User'
