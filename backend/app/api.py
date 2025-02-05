@@ -1,40 +1,35 @@
 from ninja import NinjaAPI, Router
-from .models import Tarefa
-from .schemas import TarefaSchema
-from django.contrib.auth.hashers import make_password
-from django.core.exceptions import ValidationError
-from .models import Usuario
-from .schemas import RegistroSchema
+from django.contrib.auth import authenticate
+from .models import User
+from .schemas import UserSchema, LoginSchema
+from ninja.errors import HttpError
+from rest_framework.authtoken.models import Token  # Certifique-se de importar Token corretamente
 
 api = NinjaAPI()
 router = Router()
 
-@api.post("/register/")
-def register_user(request, data: RegistroSchema):
-    # Verifica se as senhas são iguais
-    if data.password != data.confirm_password:
-        return {"error": "As senhas não coincidem."}
+@router.post("/register")
+def register(request, payload: UserSchema):
+    if payload.password != payload.confirm_password:
+        raise HttpError(400, "Passwords do not match")
+    if User.objects.filter(email=payload.email).exists():
+        raise HttpError(400, "Email already registered")
+    if User.objects.filter(username=payload.username).exists():
+        raise HttpError(400, "Username already taken")
 
-    # Verifica se o e-mail já está em uso
-    if Usuario.objects.filter(email=data.email).exists():
-        return {"error": "Este e-mail já está cadastrado."}
+    user = User.objects.create_user(
+        email=payload.email,
+        username=payload.username,
+        password=payload.password
+    )
+    return {"id": user.id, "email": user.email, "username": user.username}
 
-    # Verifica se o username já está em uso
-    if Usuario.objects.filter(username=data.username).exists():
-        return {"error": "Este nome de usuário já está em uso."}
+@router.post("/login")
+def login(request, payload: LoginSchema):
+    user = authenticate(email=payload.email, password=payload.password)
+    if not user:
+        raise HttpError(400, "Invalid credentials")
+    token, created = Token.objects.get_or_create(user=user)
+    return {"token": token.key}
 
-    # Criar o usuário
-    try:
-        user = Usuario.objects.create(
-            username=data.username,
-            email=data.email,
-            password=make_password(data.password)  # Hash da senha
-        )
-        return {"message": "Usuário cadastrado com sucesso!", "user_id": user.id}
-
-    except ValidationError as e:
-        return {"error": str(e)}
-
-@router.get("/tarefas/", response=list[TarefaSchema])
-def listar_tarefas(request):
-    return Tarefa.objects.all()
+api.add_router("/", router)
