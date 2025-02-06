@@ -1,9 +1,10 @@
 from ninja import NinjaAPI, Router
 from django.contrib.auth import authenticate
-from .models import User
-from .schemas import UserSchema, LoginSchema
+from .models import User, Tarefa
+from .schemas import UserSchema, LoginSchema, TarefaSchema, TarefaCreateSchema, TarefaUpdateSchema
 from ninja.errors import HttpError
 from rest_framework.authtoken.models import Token  # Certifique-se de importar Token corretamente
+from typing import List
 
 api = NinjaAPI()
 router = Router()
@@ -31,5 +32,34 @@ def login(request, payload: LoginSchema):
         raise HttpError(400, "Invalid credentials")
     token, created = Token.objects.get_or_create(user=user)
     return {"token": token.key}
+
+@router.get("/tarefas", response=List[TarefaSchema])
+def listar_tarefas(request):
+    return Tarefa.objects.all()
+
+@router.post("/tarefas", response=TarefaSchema)
+def criar_tarefa(request, payload: TarefaCreateSchema):
+    tarefa = Tarefa.objects.create(**payload.dict())
+    return tarefa
+
+@router.put("/tarefas/{tarefa_id}", response=TarefaSchema)
+def atualizar_tarefa(request, tarefa_id: int, payload: TarefaUpdateSchema):
+    try:
+        tarefa = Tarefa.objects.get(id=tarefa_id)
+        for attr, value in payload.dict().items():
+            setattr(tarefa, attr, value)
+        tarefa.save()
+        return tarefa
+    except Tarefa.DoesNotExist:
+        raise HttpError(404, "Tarefa não encontrada")
+
+@router.delete("/tarefas/{tarefa_id}")
+def deletar_tarefa(request, tarefa_id: int):
+    try:
+        tarefa = Tarefa.objects.get(id=tarefa_id)
+        tarefa.delete()
+        return {"success": True}
+    except Tarefa.DoesNotExist:
+        raise HttpError(404, "Tarefa não encontrada")
 
 api.add_router("/", router)
