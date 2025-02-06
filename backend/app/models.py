@@ -52,3 +52,11 @@ class User(AbstractBaseUser):
     @property
     def is_staff(self):
         return self.is_admin
+
+class Tarefa(models.Model):
+    titulo = models.CharField(max_length=255)
+    descricao = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=50, choices=[('pendente', 'Pendente'), ('andamento', 'Andamento'), ('concluido', 'Concluído')])
+
+    def __str__(self):
+        return self.titulo
