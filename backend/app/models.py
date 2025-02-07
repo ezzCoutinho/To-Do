@@ -4,9 +4,9 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 class UserManager(BaseUserManager):
     def create_user(self, email, username, password=None):
         if not email:
-            raise ValueError('Users must have an email address')
+            raise ValueError("Users must have an email address")
         if not username:
-            raise ValueError('Users must have a username')
+            raise ValueError("Users must have a username")
 
         user = self.model(
             email=self.normalize_email(email),
@@ -28,7 +28,7 @@ class UserManager(BaseUserManager):
         return user
 
 class User(AbstractBaseUser):
-    email = models.EmailField(verbose_name='email address', max_length=255, unique=True)
+    email = models.EmailField(verbose_name="email address", max_length=255, unique=True)
     username = models.CharField(max_length=255, unique=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
@@ -37,8 +37,8 @@ class User(AbstractBaseUser):
 
     objects = UserManager()
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["username"]
 
     def __str__(self):
         return self.email
@@ -54,9 +54,17 @@ class User(AbstractBaseUser):
         return self.is_admin
 
 class Tarefa(models.Model):
+    STATUS_CHOICES = [
+        ("pendente", "Pendente"),
+        ("andamento", "Andamento"),
+        ("concluido", "Concluído"),
+    ]
+
     titulo = models.CharField(max_length=255)
     descricao = models.TextField(blank=True, null=True)
-    status = models.CharField(max_length=50, choices=[('pendente', 'Pendente'), ('andamento', 'Andamento'), ('concluido', 'Concluído')])
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default="pendente")
+    data_criacao = models.DateTimeField(auto_now_add=True)  # Adiciona um timestamp de criação
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tarefas")  # Relaciona a um usuário
 
     def __str__(self):
-        return self.titulo
+        return f"{self.titulo} - {self.get_status_display()}"
