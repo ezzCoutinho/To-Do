@@ -31,6 +31,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'daphne',
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -117,3 +119,11 @@ AUTH_USER_MODEL = 'app.User'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Adicione o domínio do seu frontend
 ]
+
+ASGI_APPLICATION = "backend.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",  # Use Redis em produção
+    },
+}
