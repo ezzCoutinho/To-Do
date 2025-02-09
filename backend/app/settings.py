@@ -25,13 +25,13 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'daphne',
     'django.contrib.staticfiles',
     'ninja',  # Django Ninja
     'app',  # Our app
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
-    'daphne',
     'channels',
 ]
 
@@ -120,7 +120,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Adicione o domínio do seu frontend
 ]
 
-ASGI_APPLICATION = "backend.asgi.application"
+ASGI_APPLICATION = "app.asgi.application"
 
 CHANNEL_LAYERS = {
     "default": {
