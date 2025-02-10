@@ -1,4 +1,5 @@
 from ninja import Schema
+from pydantic import BaseModel, EmailStr
 
 class UserSchema(Schema):
     email: str
@@ -6,8 +7,8 @@ class UserSchema(Schema):
     password: str
     confirm_password: str
 
-class LoginSchema(Schema):
-    email: str
+class LoginSchema(BaseModel):
+    email: EmailStr
     password: str
 
 class TarefaSchema(Schema):
