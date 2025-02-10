@@ -3,8 +3,9 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 import { TaskCard } from "@/components/TaskCard";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
-// WebSocket padrão do Django Channels
+// URL do WebSocket para Django Channels
 const WS_URL = "ws://localhost:8000/ws/tarefas/";
 
 interface Tarefa {
@@ -18,21 +19,21 @@ interface TaskBoardProps {
   tarefas: Tarefa[];
   setTarefas: (tarefas: Tarefa[]) => void;
   onDelete: (id: number) => void;
-  onUpdate: (id: number, updatedTarefa: Partial<Tarefa>) => void;
 }
 
 export function TaskBoard({ tarefas, setTarefas, onDelete }: TaskBoardProps) {
+  const router = useRouter();
   const columns: { [key: string]: string } = {
     pendente: "Pendente",
     andamento: "Em andamento",
     concluido: "Concluído",
   };
 
-  // Estado para armazenar a conexão WebSocket
+  // Estado para conexão WebSocket
   const [socket, setSocket] = useState<WebSocket | null>(null);
 
+  // Estabelecendo a conexão WebSocket com verificação
   useEffect(() => {
-    // Criar a conexão WebSocket
     const ws = new WebSocket(WS_URL);
 
     ws.onopen = () => {
@@ -43,56 +44,109 @@ export function TaskBoard({ tarefas, setTarefas, onDelete }: TaskBoardProps) {
       const data = JSON.parse(event.data);
       console.log("📩 Atualização recebida via WebSocket:", data);
 
-      // Atualiza a UI com a nova tarefa recebida
       setTarefas((tarefas) =>
-        tarefas.map((t) => (t.id === data.id ? { ...t, status: data.status } : t))
+        tarefas.some((t) => t.id === data.id && t.status !== data.status)
+          ? tarefas.map((t) => (t.id === data.id ? { ...t, status: data.status } : t))
+          : tarefas
       );
     };
 
-    ws.onerror = (error) => {
-      console.error("❌ Erro no WebSocket:", error);
-    };
+    ws.onerror = (error) => console.error("❌ Erro no WebSocket:", error);
 
     ws.onclose = () => {
       console.log("🔴 WebSocket desconectado, tentando reconectar em 3 segundos...");
-      setTimeout(() => setSocket(new WebSocket(WS_URL)), 3000);
+      setTimeout(() => setSocket(new WebSocket(WS_URL)), 3000); // Tentativa de reconectar
     };
 
     setSocket(ws);
 
-    return () => {
-      ws.close();
-    };
-  }, []);
+    return () => ws.close();
+  }, []); // Hook que só rodará uma vez
 
-  // Atualiza o status da tarefa e envia pelo WebSocket
+  // 🔥 Busca tarefas para atualizar a UI após mudança de status
+  const fetchTarefas = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("❌ Nenhum token encontrado!");
+      router.push("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8000/api/tarefas", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        console.error("❌ Erro ao buscar tarefas:", response.status);
+        return;
+      }
+
+      const data = await response.json();
+      setTarefas(data);
+    } catch (error) {
+      console.error("❌ Erro na requisição:", error);
+    }
+  };
+
+  // 🔄 Atualiza status da tarefa ao arrastar para outra coluna
   const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
 
-    const { draggableId, destination } = result;
-    const tarefaId = parseInt(draggableId);
-    const novoStatus = destination.droppableId as "pendente" | "andamento" | "concluido";
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("❌ Nenhum token encontrado no LocalStorage!");
+      router.push("/login");
+      return;
+    }
 
-    setTarefas((tarefas) =>
-      tarefas.map((t) => (t.id === tarefaId ? { ...t, status: novoStatus } : t))
-    );
+    const tarefaId = result.draggableId;
+    const novoStatus = result.destination.droppableId;
 
     try {
       const response = await fetch(`http://localhost:8000/api/tarefas/${tarefaId}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // 🔥 Alterado para "Bearer"
+        },
         body: JSON.stringify({ status: novoStatus }),
       });
 
-      if (response.ok) {
-        console.log("✅ Tarefa atualizada no backend!");
-        if (socket) {
-          socket.send(JSON.stringify({ id: tarefaId, status: novoStatus }));
-          console.log("📡 Atualização enviada via WebSocket!");
-        }
-      } else {
-        console.error("❌ Erro ao atualizar a tarefa no backend.");
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ Erro ao atualizar tarefa:", response.status);
+        console.error("❌ Resposta do servidor:", errorText);
+        return;
       }
+
+      console.log(`✅ Tarefa ${tarefaId} movida para ${novoStatus}`);
+
+      // Atualizar a UI local após mudança de status
+      setTarefas((tarefas) =>
+        tarefas.map((t) => (t.id === tarefaId ? { ...t, status: novoStatus } : t))
+      );
+
+      // Enviar a atualização via WebSocket para todos os clientes conectados
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(
+          JSON.stringify({
+            id: tarefaId,
+            status: novoStatus,
+          })
+        );
+        console.log("📤 Enviada atualização para WebSocket");
+      } else {
+        console.log("❌ WebSocket não está aberto. Tentando reconectar...");
+        setSocket(new WebSocket(WS_URL)); // Recriar WebSocket se estiver fechado
+      }
+
+      // Também pode fazer a busca novamente para garantir a sincronização (se necessário)
+      fetchTarefas();
     } catch (error) {
       console.error("❌ Erro na requisição:", error);
     }
