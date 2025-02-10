@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'corsheaders',
     'channels',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -63,8 +64,6 @@ TEMPLATES = [
         },
     },
 ]
-
-WSGI_APPLICATION = 'app.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/stable/ref/settings/#databases
@@ -121,9 +120,26 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 ASGI_APPLICATION = "app.asgi.application"
+# WSGI_APPLICATION = 'app.wsgi.application'
 
 CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",  # Use Redis em produção
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],  # Certifique-se de que o Redis está rodando
+        },
     },
 }
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',  # Se estiver usando tokens
+    ),
+}
+
+APPEND_SLASH = True
+
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",  # Backend padrão do Django
+]
