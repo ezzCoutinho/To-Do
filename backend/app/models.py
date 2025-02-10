@@ -64,7 +64,7 @@ class Tarefa(models.Model):
     descricao = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default="pendente")
     data_criacao = models.DateTimeField(auto_now_add=True)  # Adiciona um timestamp de criação
-    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tarefas")  # Relaciona a um usuário
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)  # Relaciona a um usuário
 
     def __str__(self):
         return f"{self.titulo} - {self.get_status_display()}"
