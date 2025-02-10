@@ -26,12 +26,16 @@ export default NextAuth({
           body: JSON.stringify(credentials),
         });
 
-        const user = await res.json();
+        const data = await res.json();
 
-        if (res.ok && user) {
-          return user;
+        if (res.ok && data.token) {
+          return {
+            id: data.token,  // Guardamos o token como ID
+            email: credentials.email,
+            token: data.token, // Adicionamos o token ao objeto do usuário
+          };
         } else {
-          return null;
+          throw new Error("Credenciais inválidas");
         }
       },
     }),
@@ -40,16 +44,16 @@ export default NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        token.accessToken = user.token; // Salvar token
       }
       return token;
     },
     async session({ session, token }) {
-      session.user.id = token.id; // Exemplo: adicionar ID do usuário à sessão
+      session.user.accessToken = token.accessToken; // Adicionar token na sessão
       return session;
     },
     async redirect({ url, baseUrl }) {
-      return baseUrl + "/tarefas";
+      return baseUrl + "/tarefas"; // Redireciona para /tarefas após login
     },
   },
 });
