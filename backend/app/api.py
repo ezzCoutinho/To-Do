@@ -1,4 +1,5 @@
 from ninja import NinjaAPI, Router
+from ninja.files import UploadedFile
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
 from .models import User, Tarefa
@@ -6,8 +7,12 @@ from .schemas import UserSchema, LoginSchema, TarefaSchema, TarefaCreateSchema, 
 from ninja.errors import HttpError
 from rest_framework.authtoken.models import Token
 from typing import List
-from ninja.security import HttpBearer
 from .authentication import TokenAuth
+import logging
+from minio import Minio
+from minio.error import S3Error
+import os
+import io
 
 api = NinjaAPI()
 router = Router()
@@ -114,8 +119,64 @@ def deletar_tarefa(request, tarefa_id: int):
   tarefa.delete()
   return {"success": True}
 
-@router.get("/test")
-def test_view(request):
-  return {"message": "API está funcionando!"}
+# Endpoint de upload de arquivos
+logger = logging.getLogger(__name__)
+
+MINIO_URL = "localhost:9000"
+MINIO_ACCESS_KEY = "miniouser"
+MINIO_SECRET_KEY = "miniosecurepassword"
+MINIO_BUCKET_NAME = "meu-bucket"
+
+minio_client = Minio(
+    MINIO_URL,
+    access_key=MINIO_ACCESS_KEY,
+    secret_key=MINIO_SECRET_KEY,
+    secure=False  # Defina como True se estiver usando HTTPS
+)
+
+@router.post("/upload", response=dict)
+async def upload_file(request, file: UploadedFile):
+    """
+    Recebe um arquivo e o armazena no MinIO.
+    """
+    try:
+        logger.info("Recebendo arquivo para upload")
+        # Verifica o tipo de arquivo (opcional)
+        allowed_types = ["image/jpeg", "image/png", "application/pdf"]
+        if file.content_type not in allowed_types:
+            logger.error("Tipo de arquivo não permitido")
+            raise HttpError(400, "Tipo de arquivo não permitido")
+
+        # Verifica o tamanho do arquivo (opcional)
+        max_size = 10 * 1024 * 1024  # 10 MB
+        if file.size > max_size:
+            logger.error("Arquivo muito grande")
+            raise HttpError(400, "Arquivo muito grande")
+
+        # Caminho onde o arquivo será armazenado no MinIO
+        file_path = f"uploads/{file.name}"
+        logger.info(f"Salvando arquivo em {file_path}")
+
+        # Salva o arquivo no MinIO
+        file_data = file.read()  # Removido o await
+        file_size = len(file_data)
+        minio_client.put_object(
+            MINIO_BUCKET_NAME,
+            file_path,
+            data=io.BytesIO(file_data),
+            length=file_size,
+            content_type=file.content_type
+        )
+
+        # Retorna uma resposta de sucesso com o caminho do arquivo
+        logger.info("Arquivo enviado com sucesso")
+        return {"message": "Arquivo enviado com sucesso!", "file_path": file_path}
+
+    except S3Error as e:
+        logger.error(f"Erro ao enviar arquivo para o MinIO: {str(e)}")
+        raise HttpError(500, f"Erro ao enviar arquivo para o MinIO: {str(e)}")
+    except Exception as e:
+        logger.error(f"Erro ao enviar arquivo: {str(e)}")
+        raise HttpError(500, f"Erro ao enviar arquivo: {str(e)}")
 
 api.add_router("/", router)
