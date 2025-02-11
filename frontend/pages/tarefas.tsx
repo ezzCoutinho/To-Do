@@ -9,6 +9,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import { Calendar } from "@/components/ui/calendar";
 import { EditorContent, useEditor } from '@tiptap/react';
 import { StarterKit } from '@tiptap/starter-kit';
+import axios from "axios";
 
 interface Tarefa {
   id: number;
@@ -16,6 +17,7 @@ interface Tarefa {
   descricao?: string;
   status: "pendente" | "andamento" | "concluido";
   dataExecucao?: string;
+  file_url?: string; // Adicionando a URL do arquivo
 }
 
 export default function Tarefas() {
@@ -28,6 +30,7 @@ export default function Tarefas() {
     dataExecucao: "",
   });
 
+  const [arquivo, setArquivo] = useState<File | null>(null); // Estado para o arquivo
   const router = useRouter();
 
   // Editor do Tiptap
@@ -77,38 +80,6 @@ export default function Tarefas() {
     }
   };
 
-  // ✍ Atualiza uma tarefa
-  const atualizarTarefa = async (id: number, updatedTarefa: Partial<Tarefa>) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("❌ Nenhum token encontrado!");
-      router.push("/login");
-      return;
-    }
-
-    try {
-      const response = await fetch(`http://localhost:8000/api/tarefas/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(updatedTarefa),
-      });
-
-      if (!response.ok) {
-        console.error("❌ Erro ao atualizar tarefa:", response.status);
-        const errorText = await response.text();
-        console.error("❌ Resposta do servidor:", errorText);
-        return;
-      }
-
-      fetchTarefas();
-    } catch (error) {
-      console.error("❌ Erro na requisição:", error);
-    }
-  };
-
   // ➕ Adiciona uma nova tarefa
   const adicionarTarefa = async () => {
     const token = localStorage.getItem("token");
@@ -117,45 +88,32 @@ export default function Tarefas() {
     if (!novaTarefa.titulo) return;
 
     try {
-      await fetch("http://localhost:8000/api/tarefas", {
-        method: "POST",
+      const formData = new FormData();
+      formData.append("titulo", novaTarefa.titulo);
+      formData.append("descricao", novaTarefa.descricao || "");
+      formData.append("status", novaTarefa.status || "pendente");
+      formData.append("dataExecucao", novaTarefa.dataExecucao || "");
+
+      if (arquivo) {
+        formData.append("file", arquivo); // Envia o arquivo
+      }
+
+      const response = await axios.post("http://localhost:8000/api/tarefas", formData, {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data", // Configura para enviar arquivos
         },
-        body: JSON.stringify(novaTarefa),
       });
 
       fetchTarefas();
       setNovaTarefa({ titulo: "", descricao: "", status: "pendente", dataExecucao: "" });
+      setArquivo(null); // Limpa o arquivo
       setIsOpen(false);
+
+      console.log("Tarefa salva com sucesso:", response.data);
     } catch (error) {
       console.error("Erro ao adicionar tarefa:", error);
     }
-  };
-
-  // 🗑 Deleta uma tarefa
-  const deletarTarefa = async (id: number) => {
-    const token = localStorage.getItem("token");
-    if (!token) return router.push("/login");
-
-    try {
-      await fetch(`http://localhost:8000/api/tarefas/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      fetchTarefas(); // Atualiza a lista após deletar
-    } catch (error) {
-      console.error("Erro ao deletar tarefa:", error);
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    router.push("/login");
   };
 
   return (
@@ -166,13 +124,13 @@ export default function Tarefas() {
           <Button onClick={() => setIsOpen(true)} className="bg-blue-500 text-white">
             Adicionar Tarefa
           </Button>
-          <Button onClick={handleLogout} className="bg-red-500 text-white ml-4">
+          <Button onClick={() => router.push("/login")} className="bg-red-500 text-white ml-4">
             Logout
           </Button>
         </div>
       </Card>
 
-      <TaskBoard tarefas={tarefas} setTarefas={setTarefas} onDelete={deletarTarefa} onUpdate={atualizarTarefa} />
+      <TaskBoard tarefas={tarefas} setTarefas={setTarefas} />
 
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
         <DrawerContent className="p-6 w-[400px] bg-gray-800 rounded-xl shadow-2xl">
@@ -212,6 +170,12 @@ export default function Tarefas() {
             selected={novaTarefa.dataExecucao ? new Date(novaTarefa.dataExecucao) : undefined}
             onSelect={(date) => setNovaTarefa({ ...novaTarefa, dataExecucao: date?.toISOString() })}
             className="mb-4"
+          />
+
+          <Input
+            type="file"
+            onChange={(e) => setArquivo(e.target.files ? e.target.files[0] : null)} // Captura o arquivo
+            className="mb-4 w-full"
           />
 
           <Button onClick={adicionarTarefa} className="bg-green-500 text-white w-full py-2">
