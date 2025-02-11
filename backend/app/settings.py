@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'channels',
     'django_extensions',
+    'storages',  # Django Storages
 ]
 
 MIDDLEWARE = [
@@ -143,3 +144,24 @@ APPEND_SLASH = True
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",  # Backend padrão do Django
 ]
+
+# MinIO Configurações
+MINIO_ENDPOINT = 'localhost:9000'  # Isso se refere à porta que o MinIO está rodando (9000, não 9001)
+MINIO_ACCESS_KEY = 'miniouser'
+MINIO_SECRET_KEY = 'miniosecurepassword'
+MINIO_USE_HTTPS = False  # Como você está rodando localmente, provavelmente não está usando HTTPS
+MINIO_BUCKET_NAME = 'meu-bucket'
+
+# Configuração para o Django utilizar o MinIO para arquivos
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
+# Configurações para o boto3 (usado pelo django-storages)
+AWS_ACCESS_KEY_ID = MINIO_ACCESS_KEY
+AWS_SECRET_ACCESS_KEY = MINIO_SECRET_KEY
+AWS_STORAGE_BUCKET_NAME = MINIO_BUCKET_NAME
+AWS_S3_ENDPOINT_URL = f'http://{MINIO_ENDPOINT}'
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}
+AWS_S3_REGION_NAME = 'us-east-1'  # O MinIO não exige uma região real, então isso pode ser qualquer valor
+AWS_S3_SIGNATURE_VERSION = 's3v4'  # O MinIO usa a assinatura v4 do S3
