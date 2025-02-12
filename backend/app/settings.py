@@ -124,10 +124,10 @@ ASGI_APPLICATION = "app.asgi.application"
 # WSGI_APPLICATION = 'app.wsgi.application'
 
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],  # Certifique-se de que o Redis está rodando
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],  # Certifique-se que o Redis está rodando
         },
     },
 }
