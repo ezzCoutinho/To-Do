@@ -1,8 +1,6 @@
-# app/routing.py
-
-from django.urls import path
-from app.consumers import TarefaConsumer
+from django.urls import re_path
+from .consumers import TarefaConsumer  # Verifique se o caminho está correto!
 
 websocket_urlpatterns = [
-    path('ws/tarefas/', TarefaConsumer.as_asgi()),
+    re_path(r"ws/tarefas/$", TarefaConsumer.as_asgi()),
 ]
