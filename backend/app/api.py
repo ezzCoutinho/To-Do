@@ -3,19 +3,41 @@ from ninja.files import UploadedFile
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
 from .models import User, Tarefa
+from channels.layers import get_channel_layer
 from .schemas import UserSchema, LoginSchema, TarefaSchema, TarefaCreateSchema, TarefaUpdateSchema
+from asgiref.sync import async_to_sync
 from ninja.errors import HttpError
 from rest_framework.authtoken.models import Token
 from typing import List
 from .authentication import TokenAuth
 import logging
+import json
 from minio import Minio
 from minio.error import S3Error
-import os
 import io
 
 api = NinjaAPI()
 router = Router()
+
+def enviar_websocket(tarefa):
+    """
+    Envia os dados da tarefa para todos os clientes WebSocket conectados.
+    """
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        "tarefas",
+        {
+            "type": "send_message",
+            "message": json.dumps({
+                "id": tarefa.id,
+                "titulo": tarefa.titulo,
+                "descricao": tarefa.descricao,
+                "status": tarefa.status,
+                "usuario": tarefa.usuario.username,
+            }),
+        }
+    )
+
 
 @router.post("/register")
 def register(request, payload: UserSchema):
@@ -74,13 +96,16 @@ def criar_tarefa(request, payload: TarefaCreateSchema):
     """
     if not request.auth:
         raise HttpError(401, "Usuário não autenticado")
-
+    enviar_websocket("tomar no cu")
     tarefa = Tarefa.objects.create(
         titulo=payload.titulo,
         descricao=payload.descricao,
         status=payload.status,
         usuario=request.auth  # ✅ Agora `request.auth` contém o usuário autenticado
     )
+
+    enviar_websocket(tarefa)
+
     return tarefa
 
 @router.put("/tarefas/{tarefa_id}", auth=TokenAuth())
@@ -99,6 +124,8 @@ def atualizar_tarefa(request, tarefa_id: int, payload: TarefaUpdateSchema):
     setattr(tarefa, attr, value)
 
   tarefa.save()
+
+  enviar_websocket(tarefa)
 
   # ✅ Corrigindo o erro de serialização, convertendo o objeto em dicionário
   return {
@@ -178,5 +205,7 @@ async def upload_file(request, file: UploadedFile):
     except Exception as e:
         logger.error(f"Erro ao enviar arquivo: {str(e)}")
         raise HttpError(500, f"Erro ao enviar arquivo: {str(e)}")
+
+
 
 api.add_router("/", router)
