@@ -17,6 +17,7 @@ import { useEditor } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import axios from "axios";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+// import { io } from "socket.io-client";
 
 interface Tarefa {
   id: number;
@@ -26,6 +27,8 @@ interface Tarefa {
   dataExecucao?: string;
   file_url?: string;
 }
+
+
 
 export default function Tarefas() {
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
@@ -38,6 +41,7 @@ export default function Tarefas() {
   });
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [editingTarefa, setEditingTarefa] = useState<Tarefa | null>(null);
+  const [ws, setWs] = useState<WebSocket | null>(null);
 
   const router = useRouter();
 
@@ -50,12 +54,53 @@ export default function Tarefas() {
   });
 
   useEffect(() => {
+
     const token = localStorage.getItem("token");
     if (!token) {
       router.push("/login");
     } else {
       fetchTarefas();
     }
+
+    const socket = new WebSocket("ws://127.0.0.1:8000/ws/tarefas/");
+    setWs(socket);
+
+    socket.onopen = () => {
+        console.log("Conectado ao WebSocket!");
+    };
+
+    socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("Mensagem recebida via WebSocket:", data);
+
+        if (data.id) {
+            setTarefas((prevTarefas) => {
+                const index = prevTarefas.findIndex((t) => t.id === data.id);
+                if (index !== -1) {
+                    // Atualiza a tarefa existente
+                    const novasTarefas = [...prevTarefas];
+                    novasTarefas[index] = data;
+                    return novasTarefas;
+                }
+                // Adiciona uma nova tarefa
+                return [...prevTarefas, data];
+            });
+        }
+    };
+
+    socket.onclose = () => {
+        console.log("Desconectado do WebSocket!");
+    };
+
+    socket.onerror = (error) => {
+        console.log("Erro no WebSocket:", error);
+    };
+
+    return () => {
+        if (socket) {
+            socket.close();
+        }
+    };
   }, []);
 
   const fetchTarefas = async () => {
@@ -257,62 +302,67 @@ export default function Tarefas() {
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex gap-4 p-6 overflow-auto">
           {["pendente", "andamento", "concluido"].map((status) => (
-            <Droppable key={status} droppableId={status}>
-              {(provided) => (
-                <div
-                  {...provided.droppableProps}
-                  ref={provided.innerRef}
-                  className="flex-1 bg-gray-700 p-4 rounded-lg min-w-[300px] border border-white min-h-[200px]"
-                >
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    {status === "pendente" ? "🟡 Pendente" : status === "andamento" ? "🔵 Em Andamento" : "🟢 Concluído"}
-                  </h2>
-                  <hr className="border-t border-white my-2" />
+            <div key={status} className="flex-1">
+              {/* Cabeçalho separado */}
+              <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-2">
+                {status === "pendente" ? "🟡 Pendente" : status === "andamento" ? "🔵 Em Andamento" : "🟢 Concluído"}
+              </h2>
+              <hr className="border-t border-white mb-2" />
 
-                  <div className="space-y-4">
-                    {tarefas.filter((tarefa) => tarefa.status === status).length === 0 ? (
-                      <p className="text-gray-400 text-center mt-4">Nada aqui.</p>
-                    ) : (
-                      tarefas
-                        .filter((tarefa) => tarefa.status === status)
-                        .map((tarefa, index) => (
-                          <Draggable key={tarefa.id} draggableId={tarefa.id.toString()} index={index}>
-                            {(provided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className="bg-gray-800 p-4 rounded-lg mb-4"
-                              >
-                                <h3 className="text-lg font-semibold text-white">{tarefa.titulo}</h3>
-                                <p className="text-gray-300 text-sm">{tarefa.descricao}</p>
-                                <div className="mt-2 flex justify-between">
-                                  <Button
-                                    onClick={() => handleEditTarefa(tarefa)}
-                                    className="bg-blue-500 text-white text-sm px-3 py-1"
-                                  >
-                                    Editar
-                                  </Button>
-                                  <Button
-                                    onClick={() => handleDeleteTarefa(tarefa.id)}
-                                    className="bg-red-500 text-white text-sm px-3 py-1"
-                                  >
-                                    - Apagar
-                                  </Button>
+              {/* Coluna Droppable */}
+              <Droppable droppableId={status}>
+                {(provided) => (
+                  <div
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="bg-gray-700 p-4 rounded-lg min-w-[300px] border border-white min-h-[200px]"
+                  >
+                    <div className="space-y-4">
+                      {tarefas.filter((tarefa) => tarefa.status === status).length === 0 ? (
+                        <p className="text-gray-400 text-center mt-4">Nada aqui.</p>
+                      ) : (
+                        tarefas
+                          .filter((tarefa) => tarefa.status === status)
+                          .map((tarefa, index) => (
+                            <Draggable key={tarefa.id} draggableId={tarefa.id.toString()} index={index}>
+                              {(provided) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className="bg-gray-800 p-4 rounded-lg mb-4"
+                                >
+                                  <h3 className="text-lg font-semibold text-white">{tarefa.titulo}</h3>
+                                  <p className="text-gray-300 text-sm">{tarefa.descricao}</p>
+                                  <div className="mt-2 flex justify-between">
+                                    <Button
+                                      onClick={() => handleEditTarefa(tarefa)}
+                                      className="bg-blue-500 text-white text-sm px-3 py-1"
+                                    >
+                                      Editar
+                                    </Button>
+                                    <Button
+                                      onClick={() => handleDeleteTarefa(tarefa.id)}
+                                      className="bg-red-500 text-white text-sm px-3 py-1"
+                                    >
+                                      - Apagar
+                                    </Button>
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))
-                    )}
-                    {provided.placeholder}
+                              )}
+                            </Draggable>
+                          ))
+                      )}
+                      {provided.placeholder}
+                    </div>
                   </div>
-                </div>
-              )}
-            </Droppable>
+                )}
+              </Droppable>
+            </div>
           ))}
         </div>
       </DragDropContext>
+
 
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
         <DrawerContent className="p-4 w-[300px] bg-gray-800 rounded-xl shadow-2xl">
