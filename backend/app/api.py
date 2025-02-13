@@ -1,4 +1,4 @@
-from ninja import NinjaAPI, Router
+from ninja import NinjaAPI, Router, Form
 from ninja.files import UploadedFile
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
@@ -14,15 +14,13 @@ import logging
 import json
 from minio import Minio
 from minio.error import S3Error
+from django.http import JsonResponse
 import io
 
 api = NinjaAPI()
 router = Router()
 
 def enviar_websocket(tarefa):
-    """
-    Envia os dados da tarefa para todos os clientes WebSocket conectados.
-    """
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
         "tarefas",
@@ -37,7 +35,6 @@ def enviar_websocket(tarefa):
             }),
         }
     )
-
 
 @router.post("/register")
 def register(request, payload: UserSchema):
@@ -90,23 +87,42 @@ def listar_tarefas(request):
     return Tarefa.objects.all().order_by("-id")  # Mantém a ordem para evitar confusão
 
 @router.post("/tarefas", response=TarefaSchema, auth=TokenAuth())
-def criar_tarefa(request, payload: TarefaCreateSchema):
-    """
-    Cria uma nova tarefa e a associa ao usuário autenticado.
-    """
-    if not request.auth:
-        raise HttpError(401, "Usuário não autenticado")
-    enviar_websocket("tomar no cu")
-    tarefa = Tarefa.objects.create(
-        titulo=payload.titulo,
-        descricao=payload.descricao,
-        status=payload.status,
-        usuario=request.auth  # ✅ Agora `request.auth` contém o usuário autenticado
-    )
+def criar_tarefa(request, payload: TarefaCreateSchema = Form(...), file: UploadedFile = None):
+  """
+  Cria uma nova tarefa e a associa ao usuário autenticado.
+  """
+  if not request.auth:
+      raise HttpError(401, "Usuário não autenticado")
 
-    enviar_websocket(tarefa)
+  file_url = None
 
-    return tarefa
+  if file:
+      file_ext = file.name.split(".")[-1]
+      file_name = f"{uuid.uuid4()}.{file_ext}"
+      file_data = file.read()
+      file_size = len(file_data)
+
+      minio_client.put_object(
+          MINIO_BUCKET_NAME,
+          file_name,
+          data=io.BytesIO(file_data),
+          length=file_size,
+          content_type=file.content_type
+      )
+
+      file_url = f"http://{MINIO_URL}/{MINIO_BUCKET_NAME}/{file_name}"
+
+  tarefa = Tarefa.objects.create(
+      titulo=payload.titulo,
+      descricao=payload.descricao,
+      status=payload.status,
+      usuario=request.auth,  # ✅ Agora `request.auth` contém o usuário autenticado
+      file_url=file_url
+  )
+
+  enviar_websocket(tarefa)
+
+  return tarefa
 
 @router.put("/tarefas/{tarefa_id}", auth=TokenAuth())
 def atualizar_tarefa(request, tarefa_id: int, payload: TarefaUpdateSchema):
@@ -161,51 +177,48 @@ minio_client = Minio(
     secure=False  # Defina como True se estiver usando HTTPS
 )
 
+import uuid
+
+# Configurações do MinIO
+MINIO_URL = "localhost:9000"
+MINIO_ACCESS_KEY = "miniouser"
+MINIO_SECRET_KEY = "miniosecurepassword"
+MINIO_BUCKET_NAME = "meu-bucket"
+
+minio_client = Minio(
+    MINIO_URL,
+    access_key=MINIO_ACCESS_KEY,
+    secret_key=MINIO_SECRET_KEY,
+    secure=False  # Defina como True se estiver usando HTTPS
+)
+
 @router.post("/upload", response=dict)
 async def upload_file(request, file: UploadedFile):
     """
     Recebe um arquivo e o armazena no MinIO.
     """
     try:
-        logger.info("Recebendo arquivo para upload")
-        # Verifica o tipo de arquivo (opcional)
-        allowed_types = ["image/jpeg", "image/png", "application/pdf"]
-        if file.content_type not in allowed_types:
-            logger.error("Tipo de arquivo não permitido")
-            raise HttpError(400, "Tipo de arquivo não permitido")
-
-        # Verifica o tamanho do arquivo (opcional)
-        max_size = 10 * 1024 * 1024  # 10 MB
-        if file.size > max_size:
-            logger.error("Arquivo muito grande")
-            raise HttpError(400, "Arquivo muito grande")
-
-        # Caminho onde o arquivo será armazenado no MinIO
-        file_path = f"uploads/{file.name}"
-        logger.info(f"Salvando arquivo em {file_path}")
+        # Gera um nome único para o arquivo
+        file_ext = file.name.split(".")[-1]
+        file_name = f"{uuid.uuid4()}.{file_ext}"
 
         # Salva o arquivo no MinIO
-        file_data = file.read()  # Removido o await
+        file_data = file.read()
         file_size = len(file_data)
+
         minio_client.put_object(
             MINIO_BUCKET_NAME,
-            file_path,
+            file_name,
             data=io.BytesIO(file_data),
             length=file_size,
             content_type=file.content_type
         )
 
-        # Retorna uma resposta de sucesso com o caminho do arquivo
-        logger.info("Arquivo enviado com sucesso")
-        return {"message": "Arquivo enviado com sucesso!", "file_path": file_path}
+        # URL do arquivo armazenado
+        file_url = f"http://{MINIO_URL}/{MINIO_BUCKET_NAME}/{file_name}"
 
-    except S3Error as e:
-        logger.error(f"Erro ao enviar arquivo para o MinIO: {str(e)}")
-        raise HttpError(500, f"Erro ao enviar arquivo para o MinIO: {str(e)}")
+        return {"message": "Arquivo enviado com sucesso!", "file_url": file_url}
+
     except Exception as e:
-        logger.error(f"Erro ao enviar arquivo: {str(e)}")
-        raise HttpError(500, f"Erro ao enviar arquivo: {str(e)}")
-
-
-
+        return JsonResponse({"error": str(e)}, status=500)
 api.add_router("/", router)
