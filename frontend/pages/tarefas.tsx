@@ -17,6 +17,7 @@ import { useEditor } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import axios from "axios";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { Textarea } from "@/components/ui/textarea";
 // import { io } from "socket.io-client";
 
 interface Tarefa {
@@ -42,6 +43,7 @@ export default function Tarefas() {
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [editingTarefa, setEditingTarefa] = useState<Tarefa | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
+  const [file, setFile] = useState<File | null>(null);
 
   const router = useRouter();
 
@@ -66,40 +68,40 @@ export default function Tarefas() {
     setWs(socket);
 
     socket.onopen = () => {
-        console.log("Conectado ao WebSocket!");
+      console.log("Conectado ao WebSocket!");
     };
 
     socket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        console.log("Mensagem recebida via WebSocket:", data);
+      const data = JSON.parse(event.data);
+      console.log("Mensagem recebida via WebSocket:", data);
 
-        if (data.id) {
-            setTarefas((prevTarefas) => {
-                const index = prevTarefas.findIndex((t) => t.id === data.id);
-                if (index !== -1) {
-                    // Atualiza a tarefa existente
-                    const novasTarefas = [...prevTarefas];
-                    novasTarefas[index] = data;
-                    return novasTarefas;
-                }
-                // Adiciona uma nova tarefa
-                return [...prevTarefas, data];
-            });
-        }
+      if (data.id) {
+        setTarefas((prevTarefas) => {
+          const index = prevTarefas.findIndex((t) => t.id === data.id);
+          if (index !== -1) {
+            // Atualiza a tarefa existente
+            const novasTarefas = [...prevTarefas];
+            novasTarefas[index] = data;
+            return novasTarefas;
+          }
+          // Adiciona uma nova tarefa
+          return [...prevTarefas, data];
+        });
+      }
     };
 
     socket.onclose = () => {
-        console.log("Desconectado do WebSocket!");
+      console.log("Desconectado do WebSocket!");
     };
 
     socket.onerror = (error) => {
-        console.log("Erro no WebSocket:", error);
+      console.log("Erro no WebSocket:", error);
     };
 
     return () => {
-        if (socket) {
-            socket.close();
-        }
+      if (socket) {
+        socket.close();
+      }
     };
   }, []);
 
@@ -127,62 +129,127 @@ export default function Tarefas() {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFile(e.target.files[0]);
+    }
+  };
+
   const handleCreateTarefa = async () => {
     const token = localStorage.getItem("token");
-    if (!token) return router.push("/login");
-    if (!novaTarefa.titulo) return;
+    if (!token) return;
+
+    const formData = new FormData();
+    formData.append("titulo", novaTarefa.titulo);
+    formData.append("descricao", novaTarefa.descricao || "");
+    formData.append("status", novaTarefa.status || "pendente");
+
+    if (file) {
+      formData.append("file", file);  // ✅ Adiciona o arquivo ao FormData
+    }
 
     try {
-      const payload = {
-        titulo: novaTarefa.titulo,
-        descricao: novaTarefa.descricao || "",
-        status: novaTarefa.status || "pendente",
-      };
-
-      const response = await axios.post("http://localhost:8000/api/tarefas", payload, {
+      const response = await axios.post("http://localhost:8000/api/tarefas", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          "Content-Type": "multipart/form-data",
         },
       });
+
       console.log("Tarefa criada com sucesso:", response.data);
-      fetchTarefas();
+      fetchTarefas(); // Atualiza a lista
       resetForm();
     } catch (error) {
       console.error("Erro ao criar tarefa:", error);
     }
   };
 
+  // const handleCreateTarefa = async () => {
+  //   const token = localStorage.getItem("token");
+  //   if (!token) return router.push("/login");
+  //   if (!novaTarefa.titulo) return;
+
+  //   try {
+  //     const payload = {
+  //       titulo: novaTarefa.titulo,
+  //       descricao: novaTarefa.descricao || "",
+  //       status: novaTarefa.status || "pendente",
+  //     };
+
+  //     const response = await axios.post("http://localhost:8000/api/tarefas", payload, {
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //         "Content-Type": "application/json",
+  //       },
+  //     });
+  //     console.log("Tarefa criada com sucesso:", response.data);
+  //     fetchTarefas();
+  //     resetForm();
+  //   } catch (error) {
+  //     console.error("Erro ao criar tarefa:", error);
+  //   }
+  // };
+
   const handleUpdateTarefa = async () => {
-    if (!editingTarefa) return;
     const token = localStorage.getItem("token");
-    if (!token) return router.push("/login");
+    if (!token || !editingTarefa) return;
+
+    const formData = new FormData();
+    formData.append("titulo", novaTarefa.titulo);
+    formData.append("descricao", novaTarefa.descricao || "");
+    formData.append("status", novaTarefa.status);
+
+    if (file) {
+      formData.append("file", file); // ✅ Adiciona o arquivo ao FormData
+    }
 
     try {
-      const payload = {
-        titulo: novaTarefa.titulo,
-        descricao: novaTarefa.descricao,
-        status: novaTarefa.status,
-        dataExecucao: novaTarefa.dataExecucao,
-      };
+      const response = await axios.put(`http://localhost:8000/api/tarefas/${editingTarefa.id}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data", // ✅ Necessário para enviar arquivos
+        },
+      });
 
-      const response = await axios.put(
-        `http://localhost:8000/api/tarefas/${editingTarefa.id}`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
       console.log("Tarefa atualizada com sucesso:", response.data);
-      fetchTarefas();
+      fetchTarefas(); // Atualiza a lista de tarefas
       resetForm();
     } catch (error) {
-      console.error("Erro ao atualizar tarefa:", error);
+      console.error("Erro ao atualizar tarefa:", error.response?.data || error);
     }
   };
+
+
+  // const handleUpdateTarefa = async () => {
+  //   if (!editingTarefa) return;
+  //   const token = localStorage.getItem("token");
+  //   if (!token) return router.push("/login");
+
+  //   try {
+  //     const payload = {
+  //       titulo: novaTarefa.titulo,
+  //       descricao: novaTarefa.descricao,
+  //       status: novaTarefa.status,
+  //       dataExecucao: novaTarefa.dataExecucao,
+  //     };
+
+  //     const response = await axios.put(
+  //       `http://localhost:8000/api/tarefas/${editingTarefa.id}`,
+  //       payload,
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           "Content-Type": "application/json",
+  //         },
+  //       }
+  //     );
+  //     console.log("Tarefa atualizada com sucesso:", response.data);
+  //     fetchTarefas();
+  //     resetForm();
+  //   } catch (error) {
+  //     console.error("Erro ao atualizar tarefa:", error);
+  //   }
+  // };
 
   const handleDeleteTarefa = async (tarefaId: number) => {
     const token = localStorage.getItem("token");
@@ -334,6 +401,17 @@ export default function Tarefas() {
                                 >
                                   <h3 className="text-lg font-semibold text-white">{tarefa.titulo}</h3>
                                   <p className="text-gray-300 text-sm">{tarefa.descricao}</p>
+                                  {tarefa.file_url && (
+                                        <a
+                                          href={tarefa.file_url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-blue-400 underline mt-2 block"
+                                        >
+                                          📎 Ver Anexo
+                                        </a>
+                                      )}
+
                                   <div className="mt-2 flex justify-between">
                                     <Button
                                       onClick={() => handleEditTarefa(tarefa)}
@@ -395,11 +473,24 @@ export default function Tarefas() {
             </Select>
           </div>
           <div className="border border-gray-700 bg-gray-600 rounded-md p-4 min-h-[200px] text-white">
-            {/* <Textarea
+            <Textarea
               placeholder="Adicione uma descrição para a tarefa"
               className="w-full min-h-[150px] bg-gray-800 text-white border-gray-700"
-            /> */}
+              value={novaTarefa.descricao}
+              onChange={(e) => setNovaTarefa({ ...novaTarefa, descricao: e.target.value })}
+            />
           </div>
+
+          {/* Novo campo de upload de arquivo */}
+          <div className="mt-4">
+            <input
+              type="file"
+              onChange={handleFileChange}
+              className="w-full p-2 border border-gray-700 bg-gray-800 text-white rounded-md"
+            />
+          </div>
+
+          {/* Botão de salvar */}
           <div className="mt-4">
             <Button onClick={handleSaveTarefa} className="bg-gray-600 text-white w-full py-2">
               Salvar
