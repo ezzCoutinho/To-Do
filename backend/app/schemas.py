@@ -16,6 +16,7 @@ class TarefaSchema(Schema):
     titulo: str
     descricao: str = None
     status: str
+    file_url: str = None
 
 class TarefaCreateSchema(Schema):
     titulo: str
@@ -26,3 +27,4 @@ class TarefaUpdateSchema(Schema):
     titulo: str = None
     descricao: str = None
     status: str = None
+    file_url: str = None
