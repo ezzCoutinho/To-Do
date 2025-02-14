@@ -130,10 +130,6 @@ def atualizar_tarefa(request, tarefa_id: int, payload: TarefaUpdateSchema):
 
   tarefa = get_object_or_404(Tarefa, id=tarefa_id)
 
-  if request.user != tarefa.usuario:
-    print(f"❌ Usuário {request.user} NÃO tem permissão para editar a tarefa {tarefa_id}!")
-    raise HttpError(403, "Você não tem permissão para editar esta tarefa.")
-
   data = payload.dict(exclude_unset=True)
 
   for attr, value in data.items():
@@ -143,7 +139,6 @@ def atualizar_tarefa(request, tarefa_id: int, payload: TarefaUpdateSchema):
 
   enviar_websocket(tarefa)
 
-  # ✅ Corrigindo o erro de serialização, convertendo o objeto em dicionário
   return {
     "id": tarefa.id,
     "titulo": tarefa.titulo,
