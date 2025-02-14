@@ -289,6 +289,15 @@ export default function Tarefas() {
     const tarefaId = parseInt(draggableId);
     const novoStatus = destination.droppableId;
 
+    const tarefa = tarefas.find((t) => t.id === tarefaId);
+    if (!tarefa) return;
+
+    setTarefas((prevTarefas) =>
+      prevTarefas.map((t) =>
+        t.id === tarefaId ? { ...t, status: novoStatus } : t
+      )
+    );
+
     // Atualiza o estado local
     const updatedTarefas = [...tarefas];
     const tarefaIndex = updatedTarefas.findIndex((t) => t.id === tarefaId);
@@ -305,15 +314,27 @@ export default function Tarefas() {
     if (!token) return router.push("/login");
 
     try {
-      await axios.put(
+      const response = await axios.put(
         `http://localhost:8000/api/tarefas/${tarefaId}`,
-        { status: novoStatus },
+        {
+          status: novoStatus,
+          file_url: tarefa.file_url,  // 🔥 Mantém `file_url` na requisição
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
+      );
+
+      const updatedTarefa = response.data;
+
+      // 🔥 Atualiza a lista de tarefas com os dados recebidos do backend
+      setTarefas((prevTarefas) =>
+        prevTarefas.map((t) =>
+          t.id === tarefaId ? updatedTarefa : t
+        )
       );
       console.log(`Tarefa ${tarefaId} movida para ${novoStatus}`);
     } catch (error) {
