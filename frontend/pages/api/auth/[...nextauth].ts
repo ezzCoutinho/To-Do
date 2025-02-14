@@ -20,40 +20,59 @@ export default NextAuth({
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        const res = await fetch("http://127.0.0.1:8000/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(credentials),
-        });
+        try {
+          const res = await fetch("http://127.0.0.1:8000/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(credentials),
+          });
 
-        const data = await res.json();
+          const data = await res.json();
 
-        if (res.ok && data.token) {
+          if (!res.ok) {
+            throw new Error(data.detail || "Credenciais inválidas");
+          }
+
           return {
-            id: data.token,  // Guardamos o token como ID
+            id: data.user_id, // Use um ID válido (não o token)
             email: credentials.email,
-            token: data.token, // Adicionamos o token ao objeto do usuário
+            token: data.token, // Guardamos o token
           };
-        } else {
-          throw new Error("Credenciais inválidas");
+        } catch (error) {
+          throw new Error("Erro ao autenticar");
         }
       },
     }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.accessToken = user.token; // Salvar token
+    async jwt({ token, user, account }) {
+      if (account) {
+        // 🔥 Login via provedor OAuth (GitHub/Google)
+        token.accessToken = account.access_token;
+        token.provider = account.provider;
+        token.userType = "provider"; // Marca como usuário de provedor
+        token.email = user?.email;
       }
+
+      if (user && !account) {
+        // 🔥 Login via credenciais do Django
+        token.userType = "backend"; // Marca como usuário do backend
+        token.accessToken = user.token; // Token do backend
+        token.email = user.email;
+      }
+
       return token;
     },
+
     async session({ session, token }) {
-      session.user.accessToken = token.accessToken; // Adicionar token na sessão
+      // 🔥 Sempre atualizar os dados da sessão corretamente
+      session.user.accessToken = token.accessToken;
+      session.user.provider = token.provider || "backend"; // Se não houver provider, é do backend
+      session.user.userType = token.userType;
+      session.user.email = token.email;
       return session;
-    },
-    async redirect({ url, baseUrl }) {
-      return baseUrl + "/tarefas"; // Redireciona para /tarefas após login
-    },
-  },
+    }
+  }
+
 });
