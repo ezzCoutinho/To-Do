@@ -129,7 +129,9 @@ export default function Tarefas() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      console.log("Arquivo selecionado:", selectedFile.name);
     }
   };
 
@@ -155,6 +157,9 @@ export default function Tarefas() {
       });
 
       console.log("Tarefa criada com sucesso:", response.data);
+
+      setTarefas((prevTarefas) => [...prevTarefas, response.data]);
+
       fetchTarefas(); // Atualiza a lista
       resetForm();
     } catch (error) {
@@ -458,6 +463,11 @@ export default function Tarefas() {
               onChange={handleFileChange}
               className="w-full p-1 border border-gray-700 bg-white text-black rounded-md"
             />
+            {file && (
+              <p className="mt-1 text-sm text-gray-700">
+                📎 Arquivo selecionado: <span className="font-semibold">{file.name}</span>
+              </p>
+            )}
           </div>
           {/* Botão de salvar */}
           <div className="mt-4">
