@@ -29,8 +29,6 @@ interface Tarefa {
   file_url?: string;
 }
 
-
-
 export default function Tarefas() {
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -164,92 +162,65 @@ export default function Tarefas() {
     }
   };
 
-  // const handleCreateTarefa = async () => {
+  // const handleUpdateTarefa = async () => {
   //   const token = localStorage.getItem("token");
-  //   if (!token) return router.push("/login");
-  //   if (!novaTarefa.titulo) return;
+  //   if (!token || !editingTarefa) return;
+
+  //   const formData = new FormData();
+  //   formData.append("titulo", novaTarefa.titulo);
+  //   formData.append("descricao", novaTarefa.descricao || "");
+  //   formData.append("status", novaTarefa.status);
+
+  //   if (file) {
+  //     formData.append("file", file); // ✅ Adiciona o arquivo ao FormData
+  //   }
 
   //   try {
-  //     const payload = {
-  //       titulo: novaTarefa.titulo,
-  //       descricao: novaTarefa.descricao || "",
-  //       status: novaTarefa.status || "pendente",
-  //     };
-
-  //     const response = await axios.post("http://localhost:8000/api/tarefas", payload, {
+  //     const response = await axios.put(`http://localhost:8000/api/tarefas/${editingTarefa.id}`, formData, {
   //       headers: {
   //         Authorization: `Bearer ${token}`,
-  //         "Content-Type": "application/json",
+  //         "Content-Type": "multipart/form-data", // ✅ Necessário para enviar arquivos
   //       },
   //     });
-  //     console.log("Tarefa criada com sucesso:", response.data);
-  //     fetchTarefas();
+
+  //     console.log("Tarefa atualizada com sucesso:", response.data);
+  //     fetchTarefas(); // Atualiza a lista de tarefas
   //     resetForm();
   //   } catch (error) {
-  //     console.error("Erro ao criar tarefa:", error);
+  //     console.error("Erro ao atualizar tarefa:", error.response?.data || error);
   //   }
   // };
 
   const handleUpdateTarefa = async () => {
+    if (!editingTarefa) return;
     const token = localStorage.getItem("token");
-    if (!token || !editingTarefa) return;
-
-    const formData = new FormData();
-    formData.append("titulo", novaTarefa.titulo);
-    formData.append("descricao", novaTarefa.descricao || "");
-    formData.append("status", novaTarefa.status);
-
-    if (file) {
-      formData.append("file", file); // ✅ Adiciona o arquivo ao FormData
-    }
+    if (!token) return router.push("/login");
 
     try {
-      const response = await axios.put(`http://localhost:8000/api/tarefas/${editingTarefa.id}`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data", // ✅ Necessário para enviar arquivos
-        },
-      });
+      const payload = {
+        titulo: novaTarefa.titulo,
+        descricao: novaTarefa.descricao,
+        status: novaTarefa.status,
+        dataExecucao: novaTarefa.dataExecucao,
+      };
 
+      const response = await axios.put(
+        `http://localhost:8000/api/tarefas/${editingTarefa.id}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
       console.log("Tarefa atualizada com sucesso:", response.data);
-      fetchTarefas(); // Atualiza a lista de tarefas
+      fetchTarefas();
       resetForm();
     } catch (error) {
-      console.error("Erro ao atualizar tarefa:", error.response?.data || error);
+      console.error("Erro ao atualizar tarefa:", error);
     }
   };
-
-
-  // const handleUpdateTarefa = async () => {
-  //   if (!editingTarefa) return;
-  //   const token = localStorage.getItem("token");
-  //   if (!token) return router.push("/login");
-
-  //   try {
-  //     const payload = {
-  //       titulo: novaTarefa.titulo,
-  //       descricao: novaTarefa.descricao,
-  //       status: novaTarefa.status,
-  //       dataExecucao: novaTarefa.dataExecucao,
-  //     };
-
-  //     const response = await axios.put(
-  //       `http://localhost:8000/api/tarefas/${editingTarefa.id}`,
-  //       payload,
-  //       {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //           "Content-Type": "application/json",
-  //         },
-  //       }
-  //     );
-  //     console.log("Tarefa atualizada com sucesso:", response.data);
-  //     fetchTarefas();
-  //     resetForm();
-  //   } catch (error) {
-  //     console.error("Erro ao atualizar tarefa:", error);
-  //   }
-  // };
 
   const handleDeleteTarefa = async (tarefaId: number) => {
     const token = localStorage.getItem("token");
@@ -347,20 +318,20 @@ export default function Tarefas() {
   };
 
   return (
-    <div className="py-3 px-4 bg-gray-900 text-white min-h-screen">
-      <Card className="py-4 px-8 shadow-lg rounded-xl bg-gray-800">
-        <CardTitle className="text-center text-3xl font-semibold mb-4 text-white">Tarefas</CardTitle>
+    <div className="py-3 px-4 text-white min-h-screen">
+      <Card className="py-4 px-8 shadow-md rounded-xl ">
+        <CardTitle className="text-center text-3xl font-semibold mb-4 text-black">Tarefas</CardTitle>
         <div className="flex justify-between items-center">
           <Button
             onClick={() => {
               resetForm();
               setIsOpen(true);
             }}
-            className="bg-blue-500 text-white"
+            className="bg-gray-900 text-white hover:bg-gray-300 shadow-md  rounded-xl border border-gray-300"
           >
             + Adicionar Tarefa
           </Button>
-          <Button onClick={() => router.push("/login")} className="bg-red-500 text-white ml-4">
+          <Button onClick={() => router.push("/login")} className=" text-black bg-white hover:bg-gray-200 shadow-md  rounded-xl border border-gray-300">
             Logout
           </Button>
         </div>
@@ -371,10 +342,10 @@ export default function Tarefas() {
           {["pendente", "andamento", "concluido"].map((status) => (
             <div key={status} className="flex-1">
               {/* Cabeçalho separado */}
-              <h2 className="text-xl font-bold text-white flex items-center gap-2 mb-2">
-                {status === "pendente" ? "🟡 Pendente" : status === "andamento" ? "🔵 Em Andamento" : "🟢 Concluído"}
+              <h2 className="text-xl font-bold text-black flex items-center gap-2 mb-2">
+                {status === "pendente" ? "◯ Pendente" : status === "andamento" ? "◯ Em Andamento" : "◯ Concluído"}
               </h2>
-              <hr className="border-t border-white mb-2" />
+              <hr className="border-t border-black mb-2" />
 
               {/* Coluna Droppable */}
               <Droppable droppableId={status}>
@@ -382,11 +353,11 @@ export default function Tarefas() {
                   <div
                     {...provided.droppableProps}
                     ref={provided.innerRef}
-                    className="bg-gray-700 p-4 rounded-lg min-w-[300px] border border-white min-h-[200px]"
+                    className="bg-white p-4 rounded-lg min-w-[300px] border border-white min-h-[200px]"
                   >
                     <div className="space-y-4">
                       {tarefas.filter((tarefa) => tarefa.status === status).length === 0 ? (
-                        <p className="text-gray-400 text-center mt-4">Nada aqui.</p>
+                        <p className="text-black text-center mt-4">Nada aqui.</p>
                       ) : (
                         tarefas
                           .filter((tarefa) => tarefa.status === status)
@@ -397,10 +368,10 @@ export default function Tarefas() {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className="bg-gray-800 p-4 rounded-lg mb-4"
+                                  className="bg-white p-4 rounded-lg mb-4 border border-black"
                                 >
-                                  <h3 className="text-lg font-semibold text-white">{tarefa.titulo}</h3>
-                                  <p className="text-gray-300 text-sm">{tarefa.descricao}</p>
+                                  <h3 className="text-lg font-semibold text-black break-words">{tarefa.titulo}</h3>
+                                  <p className="text-black text-sm break-words whitespace-pre-wrap max-w-[250px] overflow-hidden text-ellipsis">{tarefa.descricao}</p>
                                   {tarefa.file_url && (
                                         <a
                                           href={tarefa.file_url}
@@ -415,13 +386,13 @@ export default function Tarefas() {
                                   <div className="mt-2 flex justify-between">
                                     <Button
                                       onClick={() => handleEditTarefa(tarefa)}
-                                      className="bg-blue-500 text-white text-sm px-3 py-1"
+                                      className="bg-gray-900 text-white hover:bg-gray-300 shadow-md  rounded-xl border border-gray-300 text-sm px-3 py-1"
                                     >
                                       Editar
                                     </Button>
                                     <Button
                                       onClick={() => handleDeleteTarefa(tarefa.id)}
-                                      className="bg-red-500 text-white text-sm px-3 py-1"
+                                      className=" text-black bg-white hover:bg-gray-200 shadow-md  rounded-xl border border-gray-300 text-sm px-3 py-1"
                                     >
                                       - Apagar
                                     </Button>
@@ -443,9 +414,9 @@ export default function Tarefas() {
 
 
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
-        <DrawerContent className="p-4 w-[300px] bg-gray-800 rounded-xl shadow-2xl">
+        <DrawerContent className="p-4 w-[300px] bg-white border border-gray-950 rounded-xl shadow-2xl">
           <DrawerHeader>
-            <DrawerTitle className="text-2xl font-semibold text-white">
+            <DrawerTitle className="text-2xl font-semibold text-black">
               {editingTarefa ? "Editar Tarefa" : "Nova Tarefa"}
             </DrawerTitle>
           </DrawerHeader>
@@ -453,7 +424,7 @@ export default function Tarefas() {
             placeholder="Título..."
             value={novaTarefa.titulo}
             onChange={(e) => setNovaTarefa({ ...novaTarefa, titulo: e.target.value })}
-            className="mb-4 w-full border border-gray-700 bg-gray-600 rounded-md p-3 text-white"
+            className="mb-4 w-full border border-gray-950 bg-white rounded-md p-3 text-black"
           />
           <div className="mb-4">
             <Select
@@ -462,34 +433,32 @@ export default function Tarefas() {
                 setNovaTarefa({ ...novaTarefa, status: value as "pendente" | "andamento" | "concluido" })
               }
             >
-              <SelectTrigger className="w-full border border-gray-700 bg-gray-600 rounded-md p-3 text-white">
+              <SelectTrigger className="w-full border border-gray-950 bg-white-950 rounded-md p-3 text-black">
                 <SelectValue placeholder="Selecione um status" />
               </SelectTrigger>
-              <SelectContent className="bg-gray-700">
-                <SelectItem value="pendente" className="bg-gray-700 text-white">🟡 Pendente</SelectItem>
-                <SelectItem value="andamento" className="bg-gray-700 text-white">🔵 Em Andamento</SelectItem>
-                <SelectItem value="concluido" className="bg-gray-700 text-white">🟢 Concluído</SelectItem>
+              <SelectContent className="bg-white text-black">
+                <SelectItem value="pendente" className="bg-white text-black">◯ Pendente</SelectItem>
+                <SelectItem value="andamento" className="bg-white text-black">◯ Em Andamento</SelectItem>
+                <SelectItem value="concluido" className="bg-white text-black">◯ Concluído</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="border border-gray-700 bg-gray-600 rounded-md p-4 min-h-[200px] text-white">
+          <div className="bg-white rounded-md p-4 min-h-[200px] text-black">
             <Textarea
               placeholder="Adicione uma descrição para a tarefa"
-              className="w-full min-h-[150px] bg-gray-800 text-white border-gray-700"
+              className="w-full min-h-[200px] bg-white text-black border border-gray-950"
               value={novaTarefa.descricao}
               onChange={(e) => setNovaTarefa({ ...novaTarefa, descricao: e.target.value })}
             />
           </div>
-
           {/* Novo campo de upload de arquivo */}
-          <div className="mt-4">
+          <div className="mt-1">
             <input
               type="file"
               onChange={handleFileChange}
-              className="w-full p-2 border border-gray-700 bg-gray-800 text-white rounded-md"
+              className="w-full p-1 border border-gray-700 bg-white text-black rounded-md"
             />
           </div>
-
           {/* Botão de salvar */}
           <div className="mt-4">
             <Button onClick={handleSaveTarefa} className="bg-gray-600 text-white w-full py-2">
