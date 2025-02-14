@@ -135,6 +135,12 @@ def atualizar_tarefa(request, tarefa_id: int, payload: TarefaUpdateSchema):
   for attr, value in data.items():
     setattr(tarefa, attr, value)
 
+  if "file_url" not in data:
+    data["file_url"] = tarefa.file_url
+
+  for attr, value in data.items():
+    setattr(tarefa, attr, value)
+
   tarefa.save()
 
   enviar_websocket(tarefa)
@@ -145,6 +151,8 @@ def atualizar_tarefa(request, tarefa_id: int, payload: TarefaUpdateSchema):
     "descricao": tarefa.descricao,
     "status": tarefa.status,
     "usuario": tarefa.usuario.email,  # Mostra o email do usuário ao invés do objeto User
+    "file_url": tarefa.file_url,
+
   }
 
 
