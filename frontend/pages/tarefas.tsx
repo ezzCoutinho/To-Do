@@ -18,7 +18,6 @@ import { StarterKit } from "@tiptap/starter-kit";
 import axios from "axios";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Textarea } from "@/components/ui/textarea";
-// import { io } from "socket.io-client";
 
 interface Tarefa {
   id: number;
@@ -167,35 +166,6 @@ export default function Tarefas() {
     }
   };
 
-  // const handleUpdateTarefa = async () => {
-  //   const token = localStorage.getItem("token");
-  //   if (!token || !editingTarefa) return;
-
-  //   const formData = new FormData();
-  //   formData.append("titulo", novaTarefa.titulo);
-  //   formData.append("descricao", novaTarefa.descricao || "");
-  //   formData.append("status", novaTarefa.status);
-
-  //   if (file) {
-  //     formData.append("file", file); // ✅ Adiciona o arquivo ao FormData
-  //   }
-
-  //   try {
-  //     const response = await axios.put(`http://localhost:8000/api/tarefas/${editingTarefa.id}`, formData, {
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //         "Content-Type": "multipart/form-data", // ✅ Necessário para enviar arquivos
-  //       },
-  //     });
-
-  //     console.log("Tarefa atualizada com sucesso:", response.data);
-  //     fetchTarefas(); // Atualiza a lista de tarefas
-  //     resetForm();
-  //   } catch (error) {
-  //     console.error("Erro ao atualizar tarefa:", error.response?.data || error);
-  //   }
-  // };
-
   const handleUpdateTarefa = async () => {
     if (!editingTarefa) return;
     const token = localStorage.getItem("token");
@@ -298,7 +268,6 @@ export default function Tarefas() {
       )
     );
 
-    // Atualiza o estado local
     const updatedTarefas = [...tarefas];
     const tarefaIndex = updatedTarefas.findIndex((t) => t.id === tarefaId);
     if (tarefaIndex === -1) return;
@@ -309,7 +278,6 @@ export default function Tarefas() {
     };
     setTarefas(updatedTarefas);
 
-    // Atualiza o backend
     const token = localStorage.getItem("token");
     if (!token) return router.push("/login");
 
@@ -318,7 +286,7 @@ export default function Tarefas() {
         `http://localhost:8000/api/tarefas/${tarefaId}`,
         {
           status: novoStatus,
-          file_url: tarefa.file_url,  // 🔥 Mantém `file_url` na requisição
+          file_url: tarefa.file_url,
         },
         {
           headers: {
@@ -330,7 +298,6 @@ export default function Tarefas() {
 
       const updatedTarefa = response.data;
 
-      // 🔥 Atualiza a lista de tarefas com os dados recebidos do backend
       setTarefas((prevTarefas) =>
         prevTarefas.map((t) =>
           t.id === tarefaId ? updatedTarefa : t
