@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from ninja import NinjaAPI
 
 from myproject.schemas.user_schema import UserIn, UserOut
+from myproject.schemas.task_schema import TaskIn, TaskOut
 
 api = NinjaAPI()
 
