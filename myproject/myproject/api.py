@@ -19,6 +19,7 @@ def create_user(request, data: UserIn):
     return UserOut(id=user.id, username=user.username)
 
 
-@api.get("/hello")
-def hello(request):
-    return "Hello world"
+@api.get("/get_users", response=list[UserOut])
+def get_users(request):
+    users = User.objects.all()
+    return users
