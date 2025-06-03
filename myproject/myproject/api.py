@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth.models import User, Task
+from django.contrib.auth.models import User
 from ninja import NinjaAPI
 from ninja.errors import HttpError
 
@@ -48,10 +48,3 @@ def get_users(request):
 def get_current_user(request):
     user = request.auth
     return UserOut(id=user.id, username=user.username)
-
-
-@api.get("/my_tasks", response=list[TaskOut], auth=jwt_auth)
-def get_my_tasks(request):
-    user = request.auth
-    tasks = Task.objects.filter(user=user)
-    return tasks
