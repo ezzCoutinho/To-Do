@@ -5,8 +5,9 @@ from ninja import NinjaAPI
 from ninja.errors import HttpError
 
 from myproject.schemas.auth_schema import LoginIn, TokenOut
-from myproject.schemas.task_schema import TaskIn, TaskOut
+from myproject.schemas.task_schema import TaskIn, TaskOut, TaskCreateIn
 from myproject.schemas.user_schema import UserIn, UserOut
+from tasks.models import Task
 
 from .auth_utils import generate_jwt_token
 from .middlewares.auth_middleware import JWTAuth
@@ -48,3 +49,52 @@ def get_users(request):
 def get_current_user(request):
     user = request.auth
     return UserOut(id=user.id, username=user.username)
+
+
+@api.post("/tasks", response=TaskOut, auth=jwt_auth)
+def create_task(request, data: TaskCreateIn):
+    """
+    Cria uma nova tarefa para o usuário autenticado
+    """
+    user = request.auth
+    task = Task.objects.create(
+        title=data.title,
+        description=data.description,
+        status=data.status,
+        author=user,
+        due_date=data.due_date,
+    )
+    return TaskOut(
+        id=task.id,
+        title=task.title,
+        description=task.description,
+        status=task.status,
+        completed=task.completed,
+        author=task.author.username,
+        created_at=task.created_at,
+        updated_at=task.updated_at,
+        due_date=task.due_date,
+    )
+
+
+@api.get("/my_tasks", response=list[TaskOut], auth=jwt_auth)
+def get_my_tasks(request):
+    """
+    Retorna tarefas do usuário autenticado
+    """
+    user = request.auth
+    tasks = Task.objects.filter(author=user)
+    return [
+        TaskOut(
+            id=task.id,
+            title=task.title,
+            description=task.description,
+            status=task.status,
+            completed=task.completed,
+            author=task.author.username,
+            created_at=task.created_at,
+            updated_at=task.updated_at,
+            due_date=task.due_date,
+        )
+        for task in tasks
+    ]
