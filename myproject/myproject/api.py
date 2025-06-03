@@ -53,9 +53,6 @@ def get_current_user(request):
 
 @api.post("/tasks", response=TaskOut, auth=jwt_auth)
 def create_task(request, data: TaskCreateIn):
-    """
-    Cria uma nova tarefa para o usuário autenticado
-    """
     user = request.auth
     task = Task.objects.create(
         title=data.title,
@@ -79,9 +76,6 @@ def create_task(request, data: TaskCreateIn):
 
 @api.get("/my_tasks", response=list[TaskOut], auth=jwt_auth)
 def get_my_tasks(request):
-    """
-    Retorna tarefas do usuário autenticado
-    """
     user = request.auth
     tasks = Task.objects.filter(author=user)
     return [
