@@ -1,5 +1,5 @@
 from functools import wraps
-from ninja.errors import HttpError
+from django.http import JsonResponse
 from myproject.errors.error_controller import handle__errors
 
 
@@ -10,6 +10,8 @@ def handle_api_errors(func):
             return func(*args, **kwargs)
         except Exception as e:
             error_response = handle__errors(e)
-            raise HttpError(error_response.status_code, error_response.body)
+            return JsonResponse(
+                error_response["body"], status=error_response["status_code"]
+            )
 
     return wrapper
