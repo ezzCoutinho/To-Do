@@ -5,7 +5,7 @@ from ninja import NinjaAPI
 from ninja.errors import HttpError
 
 from myproject.schemas.auth_schema import LoginIn, TokenOut
-from myproject.schemas.task_schema import TaskIn, TaskOut, TaskCreateIn
+from myproject.schemas.task_schema import TaskCreateIn, TaskIn, TaskOut, TaskUpdateIn
 from myproject.schemas.user_schema import UserIn, UserOut
 from tasks.models import Task
 
@@ -78,6 +78,25 @@ def create_task(request, data: TaskCreateIn):
 def get_my_tasks(request):
     user = request.auth
     tasks = Task.objects.filter(author=user)
+    return [
+        TaskOut(
+            id=task.id,
+            title=task.title,
+            description=task.description,
+            status=task.status,
+            completed=task.completed,
+            author=task.author.username,
+            created_at=task.created_at,
+            updated_at=task.updated_at,
+            due_date=task.due_date,
+        )
+        for task in tasks
+    ]
+
+
+@api.get("/tasks", response=list[TaskOut], auth=jwt_auth)
+def get_all_tasks(request):
+    tasks = Task.objects.all()
     return [
         TaskOut(
             id=task.id,
