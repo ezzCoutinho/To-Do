@@ -143,3 +143,17 @@ def update_task(request, task_id: int, data: TaskUpdateIn):
         updated_at=task.updated_at,
         due_date=task.due_date,
     )
+
+
+@api.delete("/tasks/{task_id}", auth=jwt_auth)
+def delete_task(request, task_id: int):
+    user = request.auth
+    try:
+        task = Task.objects.get(id=task_id, author=user)
+    except Task.DoesNotExist:
+        raise HttpError(
+            404, "Tarefa não encontrada ou você não tem permissão para deletá-la"
+        )
+
+    task.delete()
+    return {"message": "Tarefa deletada com sucesso"}
