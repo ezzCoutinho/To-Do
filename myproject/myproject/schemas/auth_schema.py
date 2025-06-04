@@ -8,6 +8,6 @@ class LoginIn(Schema):
 
 class TokenOut(Schema):
     access_token: str
-    token_type: str = "bearer"
+    token_type: str = "Bearer"
     user_id: int
     username: str
