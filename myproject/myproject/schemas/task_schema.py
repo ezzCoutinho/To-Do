@@ -10,6 +10,13 @@ class TaskCreateIn(Schema):
     due_date: Optional[datetime] = None
 
 
+class TaskUpdateIn(Schema):
+    title: str
+    description: str = ""
+    status: str = "todo"
+    due_date: Optional[datetime] = None
+
+
 class TaskIn(Schema):
     id: int
     title: str
