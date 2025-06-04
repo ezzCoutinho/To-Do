@@ -111,3 +111,35 @@ def get_all_tasks(request):
         )
         for task in tasks
     ]
+
+
+@api.put("/tasks/{task_id}", response=TaskOut, auth=jwt_auth)
+def update_task(request, task_id: int, data: TaskUpdateIn):
+    user = request.auth
+    try:
+        task = Task.objects.get(id=task_id, author=user)
+    except Task.DoesNotExist:
+        raise HttpError(
+            404, "Tarefa não encontrada ou você não tem permissão para editá-la"
+        )
+
+    task.title = data.title
+    task.description = data.description
+    task.status = data.status
+    task.due_date = data.due_date
+
+    task.completed = data.status == "done"
+
+    task.save()
+
+    return TaskOut(
+        id=task.id,
+        title=task.title,
+        description=task.description,
+        status=task.status,
+        completed=task.completed,
+        author=task.author.username,
+        created_at=task.created_at,
+        updated_at=task.updated_at,
+        due_date=task.due_date,
+    )
