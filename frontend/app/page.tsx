@@ -12,7 +12,7 @@ export default function Home() {
           <div className="flex items-center justify-center space-x-2">
             <ListTodo className="h-12 w-12 text-indigo-600 dark:text-indigo-400" />
             <h1 className="text-6xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              To-Do
+              To-Do ;)
             </h1>
           </div>
           <h2 className="text-2xl text-gray-600 dark:text-gray-300">
