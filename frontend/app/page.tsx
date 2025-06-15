@@ -16,7 +16,7 @@ export default function Home() {
             </h1>
           </div>
           <h2 className="text-2xl text-gray-600 dark:text-gray-300">
-            Bem vindo ao To-Do ;)
+            Bem vindo ao To-Do:)
           </h2>
           <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
             Organize suas tarefas de forma simples e eficiente. Transforme sua produtividade com nossa plataforma intuitiva.
