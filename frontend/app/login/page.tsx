@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { AuthService } from '@/lib/auth'
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
@@ -40,14 +39,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-white dark:from-gray-900 dark:to-black p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-white dark:from-gray-900 dark:to-black p-4 w-full">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Faça login na sua conta
+          <CardTitle className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Login
           </CardTitle>
           <CardDescription className="text-gray-600 dark:text-gray-400">
-            Entre com suas credenciais para acessar sua conta
+            Entre com suas credenciais para acessar sua conta To-Do ;)
           </CardDescription>
         </CardHeader>
 
@@ -101,7 +100,7 @@ export default function LoginPage() {
           </form>
         </CardContent>
 
-        <CardFooter className="text-center">
+        <CardFooter className="flex justify-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Não tem uma conta?{' '}
             <Link
