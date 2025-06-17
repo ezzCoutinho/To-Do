@@ -1,8 +1,11 @@
+'use client'
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle, ListTodo, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -84,16 +87,17 @@ export default function Home() {
 
         <Separator className="my-8" />
 
-        {/* Call to Action */}
         <div className="text-center space-y-6">
           <h3 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
             Pronto para começar?
           </h3>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-gray-800 to-black hover:from-gray-900 hover:to-gray-800 text-white">
-              <ListTodo className="h-5 w-5 mr-2" />
-              Criar Primeira Tarefa
-            </Button>
+            <Link href="/login">
+              <Button size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-gray-800 to-black hover:from-gray-900 hover:to-gray-800 text-white cursor-pointer">
+                <ListTodo className="h-5 w-5 mr-2" />
+                Criar Primeira Tarefa
+              </Button>
+            </Link>
             <Button variant="outline" size="lg" className="text-lg px-8 py-6 border-gray-800 text-gray-800 hover:bg-gray-800 hover:text-white dark:border-gray-200 dark:text-gray-200 dark:hover:bg-gray-200 dark:hover:text-black">
               Ver Funcionalidades
             </Button>
