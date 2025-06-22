@@ -37,8 +37,8 @@ export default function RegisterPage() {
     }
 
     try {
-      console.log('Registro:', { name, email, password })
-      router.push('/login')
+      await AuthService.register({ name, email, password })
+      router.push('/login?message=Conta criada com sucesso! Faça login para continuar.')
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Erro ao criar conta')
     } finally {
