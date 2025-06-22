@@ -134,11 +134,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Next.js development server
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
-# Durante desenvolvimento, você pode usar:
+# Durante desenvolvimento, eu posso usar:
 # CORS_ALLOW_ALL_ORIGINS = True
