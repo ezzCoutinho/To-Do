@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import {
   Sun,
   Sunset,
@@ -47,22 +46,27 @@ const HomePage = () => {
   const router = useRouter()
 
   useEffect(() => {
-    // Verificar autenticação
-    if (!AuthService.isAuthenticated()) {
-      router.push('/login')
-      return
+    const checkAuth = () => {
+      if (!AuthService.isAuthenticated()) {
+        router.push('/login')
+        return
+      }
+
+      const userData = AuthService.getUser()
+      setUser(userData)
+      setIsLoading(false)
     }
 
-    const userData = AuthService.getUser()
-    setUser(userData)
-    setIsLoading(false)
+    const timeoutId = setTimeout(checkAuth, 100)
 
-    // Atualizar o relógio a cada minuto
     const timer = setInterval(() => {
       setCurrentTime(new Date())
     }, 60000)
 
-    return () => clearInterval(timer)
+    return () => {
+      clearTimeout(timeoutId)
+      clearInterval(timer)
+    }
   }, [router])
 
   const getGreeting = (): GreetingInfo => {
