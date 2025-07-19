@@ -39,9 +39,9 @@ export default function LoginPage() {
 
     try {
       await AuthService.login({ email, password })
-      router.push('/')
+      router.push('/home')
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Erro ao fazer login')
+      setError(error instanceof Error ? error.message : 'Usuário ou senha inválidos')
     } finally {
       setIsLoading(false)
     }
