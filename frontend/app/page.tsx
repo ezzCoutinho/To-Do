@@ -1,5 +1,8 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { AuthService } from '@/lib/auth'
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +11,13 @@ import { CheckCircle, ListTodo, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
+  const router = useRouter()
+
+  useEffect(() => {
+    if (AuthService.isAuthenticated()) {
+      router.push('/home')
+    }
+  }, [router])
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-white dark:from-gray-900 dark:to-black flex items-center justify-center p-4">
       <div className="max-w-4xl w-full space-y-8">
