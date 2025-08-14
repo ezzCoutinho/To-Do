@@ -162,7 +162,6 @@ const HomePage = () => {
           </CardHeader>
         </Card>
 
-        {/* Informações do usuário e tempo */}
         <div className="grid md:grid-cols-3 gap-6">
           <Card className="border-2 hover:border-gray-400 transition-colors duration-300 hover:shadow-lg">
             <CardHeader className="text-center">
@@ -223,7 +222,6 @@ const HomePage = () => {
           </Card>
         </div>
 
-        {/* Seção de ações rápidas */}
         <Card className="border-2 hover:shadow-lg transition-all duration-300">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center">
@@ -256,7 +254,6 @@ const HomePage = () => {
           </CardContent>
         </Card>
 
-        {/* Estatísticas rápidas */}
         <div className="grid md:grid-cols-4 gap-4">
           <Card className="text-center hover:shadow-lg transition-all duration-300 border-2 hover:border-blue-300">
             <CardContent className="pt-6">
@@ -299,7 +296,6 @@ const HomePage = () => {
           </Card>
         </div>
 
-        {/* Mensagem motivacional */}
         <Card className={`border-2 bg-gradient-to-r ${greeting.bgGradient} hover:shadow-lg transition-all duration-300`}>
           <CardContent className="pt-6 text-center">
             <div className="flex items-center justify-center mb-4">
